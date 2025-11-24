@@ -160,13 +160,14 @@ File `.env` chứa các cấu hình cần thiết:
 ```
 DB_NAME=school_db
 DB_USER=postgres
-DB_PASSWORD=password123
+DB_PASSWORD=your_password_here
 DB_HOST=db
 DB_PORT=5432
-POSTGRES_PASSWORD=password123
-SECRET_KEY=django-insecure-key-demo-123
+POSTGRES_PASSWORD=your_password_here
+SECRET_KEY=your-secret-key-here
 DEBUG=True
 ALLOWED_HOSTS=*
+
 ```
 
 **Lưu ý**: Thay đổi `SECRET_KEY` và `POSTGRES_PASSWORD` trong môi trường production.
