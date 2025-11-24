@@ -1,0 +1,196 @@
+/*
+ * DATABASE SCHEMA - CỔNG THÔNG TIN TRƯỜNG HỌC
+ * Hệ quản trị: PostgreSQL
+ * Generated date: 2025
+ */
+
+-- 1. XÓA BẢNG CŨ NẾU TỒN TẠI (Để tránh lỗi khi chạy lại)
+DROP TABLE IF EXISTS contact_messages CASCADE;
+DROP TABLE IF EXISTS external_links CASCADE;
+DROP TABLE IF EXISTS banners CASCADE;
+DROP TABLE IF EXISTS videos CASCADE;
+DROP TABLE IF EXISTS photos CASCADE;
+DROP TABLE IF EXISTS photo_albums CASCADE;
+DROP TABLE IF EXISTS staff CASCADE;
+DROP TABLE IF EXISTS departments CASCADE;
+DROP TABLE IF EXISTS documents CASCADE;
+DROP TABLE IF EXISTS pages CASCADE;
+DROP TABLE IF EXISTS posts CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+-- =============================================
+-- 1. BẢNG USERS (Quản trị viên)
+-- =============================================
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(150) NOT NULL UNIQUE,
+    password VARCHAR(128) NOT NULL,
+    email VARCHAR(254) UNIQUE,
+    full_name VARCHAR(255),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- 2. BẢNG CATEGORIES (Danh mục đa cấp)
+-- =============================================
+CREATE TABLE categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    parent_id INTEGER REFERENCES categories(id) ON DELETE SET NULL, -- Đệ quy: Danh mục cha
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- 3. BẢNG POSTS (Tin tức & Sự kiện)
+-- =============================================
+CREATE TABLE posts (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(500) NOT NULL,
+    slug VARCHAR(500) NOT NULL UNIQUE,
+    summary TEXT,
+    content TEXT,
+    thumbnail VARCHAR(500),
+    category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+    is_featured BOOLEAN DEFAULT FALSE,
+    views INTEGER DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'DRAFT' CHECK (status IN ('DRAFT', 'PUBLISHED')),
+    published_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- 4. BẢNG PAGES (Trang tĩnh: Giới thiệu, Lịch sử...)
+-- =============================================
+CREATE TABLE pages (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(500) NOT NULL,
+    slug VARCHAR(500) NOT NULL UNIQUE,
+    content TEXT,
+    sort_order INTEGER DEFAULT 0,
+    is_published BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- 5. BẢNG DOCUMENTS (Văn bản & Tài liệu)
+-- =============================================
+CREATE TABLE documents (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(50), -- Số hiệu văn bản
+    title VARCHAR(500) NOT NULL,
+    doc_type VARCHAR(50) CHECK (doc_type IN ('CONG_VAN', 'QUYET_DINH', 'TKB', 'BIEU_MAU')),
+    file_path VARCHAR(500) NOT NULL,
+    file_size INTEGER, -- Tính bằng KB hoặc Byte
+    published_date DATE,
+    signer VARCHAR(100),
+    download_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- 6. BẢNG DEPARTMENTS (Tổ chuyên môn)
+-- =============================================
+CREATE TABLE departments (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    leader_name VARCHAR(100),
+    description TEXT,
+    sort_order INTEGER DEFAULT 0
+);
+
+-- =============================================
+-- 7. BẢNG STAFF (Giáo viên & Nhân sự)
+-- =============================================
+CREATE TABLE staff (
+    id SERIAL PRIMARY KEY,
+    full_name VARCHAR(200) NOT NULL,
+    avatar VARCHAR(500),
+    position VARCHAR(100),
+    department_id INTEGER REFERENCES departments(id) ON DELETE SET NULL,
+    email VARCHAR(254),
+    phone VARCHAR(20),
+    bio TEXT,
+    sort_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- =============================================
+-- 8. BẢNG PHOTO_ALBUMS (Thư viện ảnh)
+-- =============================================
+CREATE TABLE photo_albums (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT,
+    cover_image VARCHAR(500),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- 9. BẢNG PHOTOS (Ảnh chi tiết)
+-- =============================================
+CREATE TABLE photos (
+    id SERIAL PRIMARY KEY,
+    album_id INTEGER NOT NULL REFERENCES photo_albums(id) ON DELETE CASCADE,
+    image_url VARCHAR(500) NOT NULL,
+    caption VARCHAR(500),
+    sort_order INTEGER DEFAULT 0,
+    uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- 10. BẢNG VIDEOS (Thư viện Video)
+-- =============================================
+CREATE TABLE videos (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(500) NOT NULL,
+    video_url VARCHAR(500) NOT NULL,
+    thumbnail VARCHAR(500),
+    description TEXT,
+    is_featured BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- 11. BẢNG BANNERS (Slide & Quảng cáo)
+-- =============================================
+CREATE TABLE banners (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(200),
+    image_url VARCHAR(500) NOT NULL,
+    link_url VARCHAR(500),
+    sort_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- =============================================
+-- 12. BẢNG EXTERNAL_LINKS (Liên kết web)
+-- =============================================
+CREATE TABLE external_links (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    url VARCHAR(500) NOT NULL,
+    icon_url VARCHAR(500),
+    sort_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- =============================================
+-- 13. BẢNG CONTACT_MESSAGES (Liên hệ/Góp ý)
+-- =============================================
+CREATE TABLE contact_messages (
+    id SERIAL PRIMARY KEY,
+    full_name VARCHAR(200) NOT NULL,
+    email VARCHAR(254),
+    phone VARCHAR(20),
+    subject VARCHAR(500),
+    message TEXT NOT NULL,
+    status VARCHAR(20) DEFAULT 'NEW' CHECK (status IN ('NEW', 'READ', 'REPLIED')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
