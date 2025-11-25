@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     
     # Third-party apps
     'rest_framework',
+    'django_filters',
     'corsheaders',
     
     # Local apps
@@ -151,6 +152,12 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:8000",
     "http://localhost:5173",
+    "http://frontend:80",
+    "http://127.0.0.1:5173",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Allow all origins in development
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True

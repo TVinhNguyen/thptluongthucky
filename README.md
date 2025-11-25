@@ -1,4 +1,4 @@
-# THPT Lương Thước - School Management System
+# THPT Lương Thúc Kỳ - School Management System
 
 Hệ thống quản lý trường học được xây dựng với Django và PostgreSQL, chạy trong Docker.
 
