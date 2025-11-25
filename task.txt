@@ -1,6 +1,0 @@
-BƯỚC 1: Tạo bộ chuyển đổi dữ liệu (Serializers)
-- Nhiệm vụ: Biến dữ liệu từ Database (Python Object) thành JSON.
-BƯỚC 2: Tạo API Views (Điểm truy cập)
-- Nhiệm vụ: Định nghĩa logic (Ai được xem, xem cái gì).
-BƯỚC 3: Cấu hình Đường dẫn (URLs)
-- Nhiệm vụ: Mở cổng để người ngoài gọi vào.
