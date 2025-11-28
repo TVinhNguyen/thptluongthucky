@@ -41,8 +41,8 @@ docker compose exec -T db createdb -U postgres school_db
 Tạo các bảng trong database:
 
 ```bash
-docker compose exec -T web python manage.py makemigrations
-docker compose exec -T web python manage.py migrate
+docker compose exec -T backend python manage.py makemigrations
+docker compose exec -T backend python manage.py migrate
 ```
 
 ### 5. Tạo tài khoản Admin
@@ -50,7 +50,9 @@ docker compose exec -T web python manage.py migrate
 Tạo superuser để đăng nhập vào admin panel:
 
 ```bash
-docker compose exec -T web python manage.py createsuperuser
+docker compose exec backend python manage.py createsuperuser --noinput --username admin --email admin@example.com
+
+docker compose exec backend python manage.py changepassword admin
 ```
 
 Nhập thông tin:
