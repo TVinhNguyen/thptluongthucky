@@ -161,3 +161,10 @@ CORS_ALLOW_CREDENTIALS = True
 # Allow all origins in development
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
+
+
+UNFOLD = {
+    "SITE_TITLE": "LTK Admin Panel",       
+    "SITE_HEADER": "Hệ thống quản trị LTK",
+    "SITE_INDEX_TITLE": "",
+}

@@ -7,10 +7,11 @@ const RightSidebar = () => {
   const { data: externalLinks, isLoading } = useExternalLinks();
 
   const defaultLinks = [
-    { title: "Cổng thông tin Chính phủ", url: "https://chinhphu.vn", icon: null },
-    { title: "Bộ Giáo dục và Đào tạo", url: "https://moet.gov.vn", icon: null },
-    { title: "Sở GD&ĐT", url: "#", icon: null },
-    { title: "Cổng dịch vụ công", url: "#", icon: null },
+    { title: "Chính quyền điện tử thành phố", url: "https://egov.danang.gov.vn/", icon: '../../public/DNG_icon.png' },
+    { title: "Cổng thông tin Chính phủ", url: "https://chinhphu.vn", icon: 'https://datafiles.chinhphu.vn/cpp/1/Logo/quoc-huy.png' },
+    { title: "Bộ Giáo dục và Đào tạo", url: "https://moet.gov.vn", icon: 'https://datafiles.chinhphu.vn/cpp/1/Logo/quoc-huy.png' },
+    { title: "Sở GD&ĐT", url: "https://danang.edu.vn/", icon: '../../public/sogdlogo.png' },
+    { title: "Cổng dịch vụ công", url: "#", icon: '../../public/hop-tructuyen.png' },
   ];
 
   const links = externalLinks && externalLinks.length > 0 ? externalLinks : defaultLinks;
@@ -36,12 +37,12 @@ const RightSidebar = () => {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 px-4 py-3 hover:bg-accent hover:text-accent-foreground transition-all hover:translate-x-1 group"
+                className="flex items-center gap-3 px-4 py-3 hover:bg-accent hover:text-accent-foreground transition-all group"
               >
-                <div className="w-12 h-8 bg-muted rounded flex items-center justify-center text-xs font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-colors overflow-hidden">
+                <div className="w-12 h-8 rounded flex items-center justify-center text-xs font-bold  group-hover:text-primary-foreground transition-colors overflow-hidden">
                   {'icon' in link && link.icon ? (
-                    <img 
-                      src={getMediaUrl(link.icon)} 
+                    <img
+                      src={link.icon}
                       alt={link.title}
                       className="w-full h-full object-contain"
                     />

@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.pagination import PageNumberPagination
 from django.db.models import F
 
 from .models import (
@@ -16,6 +17,10 @@ from .serializers import (
     VideoSerializer, BannerSerializer, ExternalLinkSerializer, ContactMessageSerializer
 )
 
+class PostPagination(PageNumberPagination):
+    page_size = 10  # bao nhiêu bài / 1 page
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -44,6 +49,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Post.objects.filter(status='PUBLISHED').order_by('-published_at')
     permission_classes = [AllowAny]
     lookup_field = 'slug'
+    pagination_class = PostPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'is_featured']
     search_fields = ['title', 'summary', 'content']
@@ -71,7 +77,8 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(posts, many=True)
         return Response(serializer.data)
     
-    @action(detail=False, methods=['get'])
+    # @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], url_path='by_category')
     def by_category(self, request):
         """Lấy bài viết theo slug danh mục"""
         category_slug = request.query_params.get('slug')

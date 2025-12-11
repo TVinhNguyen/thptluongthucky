@@ -8,7 +8,7 @@ const LeftSidebar = () => {
       items: [
         { label: "Ban Giám hiệu", href: "/can-bo-giao-vien?filter=ban-giam-hieu" },
         { label: "Chi bộ Đảng", href: "/co-cau-to-chuc#chi-bo-dang" },
-        { label: "BCH Công Đoàn", href: "/co-cau-to-chuc#cong-doan" },
+        // { label: "BCH Công Đoàn", href: "/co-cau-to-chuc#cong-doan" },
         { label: "Đoàn Thanh niên", href: "/co-cau-to-chuc#doan-thanh-nien" },
         { label: "Tổ Văn Phòng", href: "/can-bo-giao-vien?filter=van-phong" },
         { label: "Tổ Chuyên môn", href: "/can-bo-giao-vien?filter=chuyen-mon" },
@@ -27,7 +27,7 @@ const LeftSidebar = () => {
       items: [
         { label: "Văn bản Sở GD&ĐT", href: "/thu-vien-van-ban?type=so-gddt" },
         { label: "Văn bản Trường", href: "/thu-vien-van-ban?type=truong" },
-        { label: "Văn bản HĐND-UBND huyện", href: "/thu-vien-van-ban?type=hdnd-ubnd" },
+        { label: "Văn bản HĐND-UBND xã", href: "/thu-vien-van-ban?type=hdnd-ubnd" },
         { label: "Thông báo, phổ biến", href: "/thu-vien-van-ban?type=thong-bao" },
       ],
     },
@@ -52,7 +52,7 @@ const LeftSidebar = () => {
               <Link
                 key={item.label}
                 to={item.href}
-                className="block px-4 py-3 hover:bg-accent hover:text-accent-foreground transition-all text-sm hover:translate-x-1"
+                className="block px-4 py-3 hover:bg-accent hover:text-accent-foreground transition-all text-sm"
               >
                 {item.label}
               </Link>

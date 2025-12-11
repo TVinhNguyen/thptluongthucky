@@ -82,6 +82,14 @@ class VideoAdmin(ModelAdmin):
     search_fields = ['title', 'description']
     ordering = ['-created_at']
 
+    actions = ['hard_delete']
+
+    def hard_delete(self, request, queryset):
+        queryset.delete()
+        self.message_user(request, "Delete banner compelete!")
+
+    hard_delete.short_description = "Xóa hoàn toàn (hard delete)"
+
 
 @admin.register(Banner)
 class BannerAdmin(ModelAdmin):

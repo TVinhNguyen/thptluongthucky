@@ -125,3 +125,27 @@ All colors MUST be HSL.
     transform: scale(1.02);
   }
 }
+
+@layer components {
+  .nav-link {
+    @apply relative px-4 py-6 text-sm font-medium text-primary-foreground 
+           bg-transparent rounded-none
+           whitespace-nowrap transition-all duration-200;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus-visible {
+    @apply text-white bg-transparent;
+  }
+
+  /* Underline animation */
+  .nav-link::after {
+    content: "";
+    @apply absolute left-0 -bottom-1 w-0 h-[2px] bg-white transition-all duration-300;
+  }
+
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after {
+    @apply w-full;
+  }
+}

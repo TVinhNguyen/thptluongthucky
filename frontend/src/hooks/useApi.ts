@@ -42,13 +42,30 @@ export function useFeaturedPosts() {
   });
 }
 
+// export function usePostsByCategory(categorySlug: string, page?: number) {
+//   return useQuery({
+//     queryKey: ['posts', 'category', categorySlug, page],
+//     queryFn: () => api.posts.getByCategory(categorySlug, page),
+//     enabled: !!categorySlug,
+//   });
+// }
+
 export function usePostsByCategory(categorySlug: string, page?: number) {
   return useQuery({
     queryKey: ['posts', 'category', categorySlug, page],
-    queryFn: () => api.posts.getByCategory(categorySlug, page),
+    queryFn: () => {
+      console.log("🚀 API CALL usePostsByCategory:", {
+        categorySlug,
+        page,
+        url: `/posts/by_category/?slug=${categorySlug}&page=${page}`
+      });
+
+      return api.posts.getByCategory(categorySlug, page);
+    },
     enabled: !!categorySlug,
   });
 }
+
 
 // Pages hooks
 export function usePages() {
