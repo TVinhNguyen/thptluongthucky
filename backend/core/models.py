@@ -1,13 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils.text import slugify
+from django_ckeditor_5.fields import CKEditor5Field
+from .utils import slugify_vietnamese
 
 # Create your models here.
 
 class Category(models.Model):
     """Danh mục đa cấp cho tin tức"""
     name = models.CharField(max_length=255, verbose_name="Tên danh mục")
-    slug = models.SlugField(max_length=255, unique=True, verbose_name="Slug")
+    slug = models.SlugField(max_length=255, unique=True, verbose_name="Slug", blank=True)
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, 
                                related_name='children', verbose_name="Danh mục cha")
     sort_order = models.IntegerField(default=0, verbose_name="Thứ tự")
@@ -17,6 +18,11 @@ class Category(models.Model):
         verbose_name = "Danh mục"
         verbose_name_plural = "Danh mục"
         ordering = ['sort_order', 'name']
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify_vietnamese(self.name)
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return self.name
@@ -30,9 +36,9 @@ class Post(models.Model):
     ]
     
     title = models.CharField(max_length=500, verbose_name="Tiêu đề")
-    slug = models.SlugField(max_length=500, unique=True, verbose_name="Slug")
+    slug = models.SlugField(max_length=500, unique=True, verbose_name="Slug", blank=True)
     summary = models.TextField(blank=True, verbose_name="Tóm tắt")
-    content = models.TextField(blank=True, verbose_name="Nội dung")
+    content = CKEditor5Field('Nội dung', config_name='extends', blank=True)
     thumbnail = models.ImageField(upload_to='posts/', blank=True, null=True, verbose_name="Ảnh đại diện")
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, 
                                  related_name='posts', verbose_name="Danh mục")
@@ -48,6 +54,11 @@ class Post(models.Model):
         verbose_name_plural = "Bài viết"
         ordering = ['-published_at', '-created_at']
     
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify_vietnamese(self.title)
+        super().save(*args, **kwargs)
+    
     def __str__(self):
         return self.title
 
@@ -55,8 +66,8 @@ class Post(models.Model):
 class Page(models.Model):
     """Trang tĩnh: Giới thiệu, Lịch sử..."""
     title = models.CharField(max_length=500, verbose_name="Tiêu đề")
-    slug = models.SlugField(max_length=500, unique=True, verbose_name="Slug")
-    content = models.TextField(blank=True, verbose_name="Nội dung")
+    slug = models.SlugField(max_length=500, unique=True, verbose_name="Slug", blank=True)
+    content = CKEditor5Field('Nội dung', config_name='extends', blank=True)
     sort_order = models.IntegerField(default=0, verbose_name="Thứ tự")
     is_published = models.BooleanField(default=True, verbose_name="Hiển thị")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -66,6 +77,11 @@ class Page(models.Model):
         verbose_name = "Trang tĩnh"
         verbose_name_plural = "Trang tĩnh"
         ordering = ['sort_order', 'title']
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify_vietnamese(self.title)
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return self.title
@@ -140,7 +156,7 @@ class Staff(models.Model):
 class PhotoAlbum(models.Model):
     """Thư viện ảnh - Album"""
     name = models.CharField(max_length=255, verbose_name="Tên album")
-    slug = models.SlugField(max_length=255, unique=True, verbose_name="Slug")
+    slug = models.SlugField(max_length=255, unique=True, verbose_name="Slug", blank=True)
     description = models.TextField(blank=True, verbose_name="Mô tả")
     cover_image = models.ImageField(upload_to='albums/', blank=True, null=True, verbose_name="Ảnh bìa")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -149,6 +165,11 @@ class PhotoAlbum(models.Model):
         verbose_name = "Album ảnh"
         verbose_name_plural = "Album ảnh"
         ordering = ['-created_at']
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify_vietnamese(self.name)
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return self.name
