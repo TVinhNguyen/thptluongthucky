@@ -23,6 +23,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('core.urls')),  # API endpoints
+    path('ckeditor5/', include('django_ckeditor_5.urls')),  # CKEditor 5 upload
 ]
 
 if settings.DEBUG:

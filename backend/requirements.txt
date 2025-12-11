@@ -14,9 +14,8 @@ djangorestframework-simplejwt
 python-dotenv
 Pillow
 django-filter
+python-slugify
 
 # --- Editor ---
-# Lưu ý: Với Django 5+, django-ckeditor cũ có thể gặp warning. 
-# Nên chuyển sang bản fork mới hoặc cấu hình kỹ. 
-# Tạm thời dùng bản này, nếu lỗi thì đổi sang 'django-ckeditor-5'
-django-ckeditor
+# Django CKEditor 5 - Modern WYSIWYG editor
+django-ckeditor-5
