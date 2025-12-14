@@ -22,7 +22,8 @@ const Navigation = () => {
       label: "Văn bản - Công văn",
       dropdownItems: [
         { label: "Thư viện văn bản", href: "/thu-vien-van-ban" },
-        { label: "Văn bản mới", href: "/chuyen-muc/van-ban" },
+        { label: "Công văn", href: "/thu-vien-van-ban/cong-van" },
+        { label: "Quyết định", href: "/thu-vien-van-ban/quyet-dinh" },
       ],
     },
     {

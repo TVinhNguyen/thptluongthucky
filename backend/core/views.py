@@ -123,6 +123,13 @@ class DocumentViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['doc_type']
     search_fields = ['title', 'code', 'signer']
     
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            "results": serializer.data
+        })
+        
     @action(detail=True, methods=['post'])
     def download(self, request, pk=None):
         """Tăng số lượt tải khi người dùng download"""

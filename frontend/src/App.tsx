@@ -24,6 +24,10 @@ const App = () => (
           <Route path="/bai-viet/:id" element={<PostDetail />} />
           <Route path="/chuyen-muc/:category" element={<CategoryList />} />
           <Route path="/thu-vien-van-ban" element={<DocumentLibrary />} />
+          <Route
+            path="/thu-vien-van-ban/:type"
+            element={<DocumentLibrary />}
+          />
           <Route path="/co-cau-to-chuc" element={<OrgChart />} />
           <Route path="/can-bo-giao-vien" element={<Staff />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

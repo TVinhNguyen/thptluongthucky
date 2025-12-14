@@ -42,30 +42,13 @@ export function useFeaturedPosts() {
   });
 }
 
-// export function usePostsByCategory(categorySlug: string, page?: number) {
-//   return useQuery({
-//     queryKey: ['posts', 'category', categorySlug, page],
-//     queryFn: () => api.posts.getByCategory(categorySlug, page),
-//     enabled: !!categorySlug,
-//   });
-// }
-
 export function usePostsByCategory(categorySlug: string, page?: number) {
   return useQuery({
     queryKey: ['posts', 'category', categorySlug, page],
-    queryFn: () => {
-      console.log("🚀 API CALL usePostsByCategory:", {
-        categorySlug,
-        page,
-        url: `/posts/by_category/?slug=${categorySlug}&page=${page}`
-      });
-
-      return api.posts.getByCategory(categorySlug, page);
-    },
+    queryFn: () => api.posts.getByCategory(categorySlug, page),
     enabled: !!categorySlug,
   });
 }
-
 
 // Pages hooks
 export function usePages() {
@@ -85,10 +68,21 @@ export function usePage(slug: string) {
 }
 
 // Documents hooks
+// export function useDocuments(params?: { page?: number; doc_type?: string; search?: string }) {
+//   return useQuery({
+//     queryKey: ['documents', params],
+//     queryFn: () => api.documents.getAll(params),
+//   });
+// }
+
 export function useDocuments(params?: { page?: number; doc_type?: string; search?: string }) {
   return useQuery({
     queryKey: ['documents', params],
-    queryFn: () => api.documents.getAll(params),
+    queryFn: async () => {
+      const response = await api.documents.getAll(params);
+      console.log('useDocuments response:', response);
+      return response;
+    },
   });
 }
 
