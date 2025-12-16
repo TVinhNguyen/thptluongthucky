@@ -80,7 +80,6 @@ export function useDocuments(params?: { page?: number; doc_type?: string; search
     queryKey: ['documents', params],
     queryFn: async () => {
       const response = await api.documents.getAll(params);
-      console.log('useDocuments response:', response);
       return response;
     },
   });

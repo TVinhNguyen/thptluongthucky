@@ -37,14 +37,13 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
         """Chỉ lấy danh mục cha (parent=None)"""
         return Category.objects.filter(parent=None).order_by('sort_order', 'name')
 
-
 class PostViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint để xem bài viết
     - list: Danh sách bài viết
     - retrieve: Chi tiết bài viết
     - featured: Bài viết nổi bật
-    - by_category: Bài viết theo danh mục
+    - by_category: Bài viết theo danh mục / tin mới nhất
     """
     queryset = Post.objects.filter(status='PUBLISHED').order_by('-published_at')
     permission_classes = [AllowAny]
@@ -54,48 +53,68 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['category', 'is_featured']
     search_fields = ['title', 'summary', 'content']
     ordering_fields = ['published_at', 'views']
-    
+
+    # Ít nhất phải có cái này để tránh AssertionError
+    serializer_class = PostListSerializer
+
     def get_serializer_class(self):
         """Sử dụng serializer khác nhau cho list và detail"""
         if self.action == 'retrieve':
             return PostDetailSerializer
         return PostListSerializer
-    
+
     def retrieve(self, request, *args, **kwargs):
         """Tăng lượt xem khi đọc chi tiết"""
         instance = self.get_object()
-        # Tăng view count
         Post.objects.filter(pk=instance.pk).update(views=F('views') + 1)
         instance.refresh_from_db()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-    
+
     @action(detail=False, methods=['get'])
     def featured(self, request):
         """Lấy các bài viết nổi bật"""
         posts = self.get_queryset().filter(is_featured=True)[:5]
         serializer = self.get_serializer(posts, many=True)
         return Response(serializer.data)
-    
-    # @action(detail=False, methods=['get'])
+
     @action(detail=False, methods=['get'], url_path='by_category')
     def by_category(self, request):
-        """Lấy bài viết theo slug danh mục"""
+        """
+        Lấy bài viết theo slug danh mục.
+        Nếu slug = 'tin-moi-nhat' thì trả về tin mới nhất (không theo danh mục).
+        """
         category_slug = request.query_params.get('slug')
         if not category_slug:
-            return Response({'error': 'Vui lòng cung cấp slug danh mục'}, 
-                          status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            category = Category.objects.get(slug=category_slug)
-            posts = self.get_queryset().filter(category=category)
-            page = self.paginate_queryset(posts)
+            return Response(
+                {'error': 'Vui lòng cung cấp slug danh mục'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Trường hợp đặc biệt: tin mới nhất
+        if category_slug == 'tin-moi-nhat':
+            queryset = (
+                self.get_queryset()
+                .filter(published_at__isnull=False)
+                .order_by('-published_at')
+            )
+            page = self.paginate_queryset(queryset)
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        except Category.DoesNotExist:
-            return Response({'error': 'Không tìm thấy danh mục'}, 
-                          status=status.HTTP_404_NOT_FOUND)
 
+        # Các danh mục bình thường
+        try:
+            category = Category.objects.get(slug=category_slug)
+        except Category.DoesNotExist:
+            return Response(
+                {'error': 'Không tìm thấy danh mục'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        posts = self.get_queryset().filter(category=category)
+        page = self.paginate_queryset(posts)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
 class PageViewSet(viewsets.ReadOnlyModelViewSet):
     """

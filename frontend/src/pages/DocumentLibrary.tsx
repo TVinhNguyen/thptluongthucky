@@ -43,7 +43,7 @@ const DocumentLibrary = () => {
       await downloadMutation.mutateAsync(doc.id);
       window.open(getMediaUrl(doc.file), "_blank");
     } catch (error) {
-      console.error("Download error:", error);
+      // console.error("Download error:", error);
     }
   };
 

@@ -108,7 +108,7 @@ class Document(models.Model):
     
     class Meta:
         verbose_name = "Văn bản"
-        verbose_name_plural = "Văn bản"
+        verbose_name_plural = "Công văn - Văn bản"
         ordering = ['-published_date', '-created_at']
     
     def __str__(self):

@@ -16,7 +16,6 @@ const CategoryList = () => {
   const currentPage = parseInt(searchParams.get('page') || '1');
   
   const { data, isLoading, error } = usePostsByCategory(category || '', currentPage);
-  
   const categoryNames: Record<string, string> = {
     "tin-moi-nhat": "Tin mới nhất",
     "su-kien": "Sự kiện",
@@ -24,7 +23,6 @@ const CategoryList = () => {
     "ke-hoach-giao-duc": "Kế hoạch giáo dục",
     "thi-kiem-tra": "Thi - Kiểm tra",
     "thoi-khoa-bieu": "Thời khóa biểu",
-    "van-ban": "Văn bản",
     "chuong-trinh-hoc": "Chương trình học",
     "tai-lieu": "Tài liệu",
     "video": "Video",
