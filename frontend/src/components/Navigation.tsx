@@ -39,6 +39,7 @@ const Navigation = () => {
       dropdownItems: [
         { label: "Tài liệu", href: "/chuyen-muc/tai-lieu" },
         { label: "Video", href: "/chuyen-muc/video" },
+        { label: "Ảnh", href: "/chuyen-muc/anh" },
       ],
     },
     {

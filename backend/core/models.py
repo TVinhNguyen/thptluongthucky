@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django_ckeditor_5.fields import CKEditor5Field
 from .utils import slugify_vietnamese
+from cloudinary.models import CloudinaryField
 
 # Create your models here.
 
@@ -153,12 +154,38 @@ class Staff(models.Model):
         return self.full_name
 
 
+# class PhotoAlbum(models.Model):
+#     """Thư viện ảnh - Album"""
+#     name = models.CharField(max_length=255, verbose_name="Tên album")
+#     slug = models.SlugField(max_length=255, unique=True, verbose_name="Slug", blank=True)
+#     description = models.TextField(blank=True, verbose_name="Mô tả")
+#     cover_image = models.ImageField(upload_to='albums/', blank=True, null=True, verbose_name="Ảnh bìa")
+#     created_at = models.DateTimeField(auto_now_add=True)
+    
+#     class Meta:
+#         verbose_name = "Album ảnh"
+#         verbose_name_plural = "Album ảnh"
+#         ordering = ['-created_at']
+    
+#     def save(self, *args, **kwargs):
+#         if not self.slug:
+#             self.slug = slugify_vietnamese(self.name)
+#         super().save(*args, **kwargs)
+    
+#     def __str__(self):
+#         return self.name
+
 class PhotoAlbum(models.Model):
     """Thư viện ảnh - Album"""
     name = models.CharField(max_length=255, verbose_name="Tên album")
     slug = models.SlugField(max_length=255, unique=True, verbose_name="Slug", blank=True)
     description = models.TextField(blank=True, verbose_name="Mô tả")
-    cover_image = models.ImageField(upload_to='albums/', blank=True, null=True, verbose_name="Ảnh bìa")
+    cover_image = CloudinaryField(
+        "Ảnh bìa",
+        resource_type="image",
+        blank=True,
+        null=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -175,10 +202,29 @@ class PhotoAlbum(models.Model):
         return self.name
 
 
+# class Photo(models.Model):
+#     """Ảnh chi tiết trong album"""
+#     album = models.ForeignKey(PhotoAlbum, on_delete=models.CASCADE, related_name='photos', verbose_name="Album")
+#     image = models.ImageField(upload_to='photos/', verbose_name="Ảnh")
+#     caption = models.CharField(max_length=500, blank=True, verbose_name="Chú thích")
+#     sort_order = models.IntegerField(default=0, verbose_name="Thứ tự")
+#     uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+#     class Meta:
+#         verbose_name = "Ảnh"
+#         verbose_name_plural = "Ảnh"
+#         ordering = ['sort_order', '-uploaded_at']
+    
+#     def __str__(self):
+#         return f"{self.album.name} - {self.caption or 'Ảnh'}"
+
 class Photo(models.Model):
     """Ảnh chi tiết trong album"""
     album = models.ForeignKey(PhotoAlbum, on_delete=models.CASCADE, related_name='photos', verbose_name="Album")
-    image = models.ImageField(upload_to='photos/', verbose_name="Ảnh")
+    image = CloudinaryField(
+        "image",
+        resource_type="image",
+    )
     caption = models.CharField(max_length=500, blank=True, verbose_name="Chú thích")
     sort_order = models.IntegerField(default=0, verbose_name="Thứ tự")
     uploaded_at = models.DateTimeField(auto_now_add=True)
@@ -192,6 +238,23 @@ class Photo(models.Model):
         return f"{self.album.name} - {self.caption or 'Ảnh'}"
 
 
+# class Video(models.Model):
+#     """Thư viện Video"""
+#     title = models.CharField(max_length=500, verbose_name="Tiêu đề")
+#     video_url = models.URLField(max_length=500, verbose_name="Link video")
+#     thumbnail = models.ImageField(upload_to='videos/', blank=True, null=True, verbose_name="Ảnh đại diện")
+#     description = models.TextField(blank=True, verbose_name="Mô tả")
+#     is_featured = models.BooleanField(default=False, verbose_name="Video nổi bật")
+#     created_at = models.DateTimeField(auto_now_add=True)
+    
+#     class Meta:
+#         verbose_name = "Video"
+#         verbose_name_plural = "Video"
+#         ordering = ['-created_at']
+    
+#     def __str__(self):
+#         return self.title
+    
 class Video(models.Model):
     """Thư viện Video"""
     title = models.CharField(max_length=500, verbose_name="Tiêu đề")
@@ -208,7 +271,6 @@ class Video(models.Model):
     
     def __str__(self):
         return self.title
-
 
 class Banner(models.Model):
     """Slide & Quảng cáo"""

@@ -26,6 +26,7 @@ const CategoryList = () => {
     "chuong-trinh-hoc": "Chương trình học",
     "tai-lieu": "Tài liệu",
     "video": "Video",
+    "anh": "Ảnh",
   };
 
   const categoryTitle = categoryNames[category || ""] || category?.replace(/-/g, " ") || "Danh sách";
