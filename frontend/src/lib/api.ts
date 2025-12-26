@@ -224,13 +224,13 @@ export const api = {
 
   // Photo Albums
   photoAlbums: {
-    getAll: () => fetchAPI<PhotoAlbum[]>('/photo-albums/'),
+    getAll: (page = 1) => fetchAPI<Paginated<PhotoAlbum>>(`/photo-albums/?page=${page}`),
     getBySlug: (slug: string) => fetchAPI<PhotoAlbum>(`/photo-albums/${slug}/`),
   },
 
   // Videos
   videos: {
-    getAll: () => fetchAPI<Video[]>('/videos/'),
+    getAll: (page = 1) => fetchAPI<Paginated<Video>>(`/videos/?page=${page}`),
     getFeatured: () => fetchAPI<Video[]>('/videos/featured/'),
     getById: (id: number) => fetchAPI<Video>(`/videos/${id}/`),
   },
@@ -281,3 +281,10 @@ export function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
+
+export type Paginated<T> = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+};

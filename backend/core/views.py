@@ -201,6 +201,7 @@ class PhotoAlbumViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = PhotoAlbum.objects.all().order_by('-created_at')
     permission_classes = [AllowAny]
     lookup_field = 'slug'
+    pagination_class = PostPagination
     
     def get_serializer_class(self):
         """Sử dụng serializer khác nhau cho list và detail"""
@@ -221,6 +222,7 @@ class VideoViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'description']
+    pagination_class = PostPagination
     
     @action(detail=False, methods=['get'])
     def featured(self, request):

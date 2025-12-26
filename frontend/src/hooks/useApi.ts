@@ -146,10 +146,26 @@ export function useStaffMember(id: number) {
 }
 
 // Photo Albums hooks
-export function usePhotoAlbums() {
+// export function usePhotoAlbums() {
+//   return useQuery({
+//     queryKey: ['photoAlbums'],
+//     queryFn: api.photoAlbums.getAll,
+//   });
+// }
+
+// // Videos hooks
+// export function useVideos() {
+//   return useQuery({
+//     queryKey: ['videos'],
+//     queryFn: api.videos.getAll,
+//   });
+// }
+
+export function usePhotoAlbums(page: number) {
   return useQuery({
-    queryKey: ['photoAlbums'],
-    queryFn: api.photoAlbums.getAll,
+    queryKey: ['photoAlbums', page],
+    queryFn: () => api.photoAlbums.getAll(page),
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -161,11 +177,11 @@ export function usePhotoAlbum(slug: string) {
   });
 }
 
-// Videos hooks
-export function useVideos() {
+export function useVideos(page: number) {
   return useQuery({
-    queryKey: ['videos'],
-    queryFn: api.videos.getAll,
+    queryKey: ['videos', page],
+    queryFn: () => api.videos.getAll(page),
+    placeholderData: (previousData) => previousData,
   });
 }
 

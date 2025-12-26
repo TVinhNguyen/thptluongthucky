@@ -200,7 +200,7 @@ class PhotoAlbum(models.Model):
     
     def __str__(self):
         return self.name
-
+        
 
 # class Photo(models.Model):
 #     """Ảnh chi tiết trong album"""
