@@ -48,31 +48,51 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r backend/requirements.txt
 
-    - name: Run Django migrations
+    - name: Django check
       env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        DB_NAME: test_db
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        DB_HOST: localhost
+        DB_PORT: 5432
+        SECRET_KEY: test-secret-key
+        DEBUG: "False"
+        ALLOWED_HOSTS: localhost,127.0.0.1
       run: |
         cd backend
-        # Wait for database to be ready
-        until pg_isready -h localhost -p 5432 -U postgres; do
-          echo 'Waiting for PostgreSQL...'
-          sleep 1
-        done
-        python manage.py migrate
+        python manage.py check --deploy
+
+    - name: Run Django migrations
+      env:
+        DB_NAME: test_db
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        DB_HOST: localhost
+        DB_PORT: 5432
+        SECRET_KEY: test-secret-key
+        DEBUG: "True"
+        ALLOWED_HOSTS: localhost,127.0.0.1
+      run: |
+        cd backend
+        python manage.py migrate --no-input
 
     - name: Run Django tests
       env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        DB_NAME: test_db
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        DB_HOST: localhost
+        DB_PORT: 5432
+        SECRET_KEY: test-secret-key
+        DEBUG: "True"
+        ALLOWED_HOSTS: localhost,127.0.0.1
       run: |
         cd backend
-        # Wait for database to be ready
-        until pg_isready -h localhost -p 5432 -U postgres; do
-          echo 'Waiting for PostgreSQL...'
-          sleep 1
-        done
-        python manage.py test --verbosity=2
+        python manage.py test --verbosity=2 --no-input
 
     - name: Collect static files
+      env:
+        SECRET_KEY: test-secret-key
       run: |
         cd backend
         python manage.py collectstatic --noinput --dry-run
