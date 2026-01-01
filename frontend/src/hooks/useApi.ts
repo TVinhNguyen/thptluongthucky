@@ -42,30 +42,13 @@ export function useFeaturedPosts() {
   });
 }
 
-// export function usePostsByCategory(categorySlug: string, page?: number) {
-//   return useQuery({
-//     queryKey: ['posts', 'category', categorySlug, page],
-//     queryFn: () => api.posts.getByCategory(categorySlug, page),
-//     enabled: !!categorySlug,
-//   });
-// }
-
 export function usePostsByCategory(categorySlug: string, page?: number) {
   return useQuery({
     queryKey: ['posts', 'category', categorySlug, page],
-    queryFn: () => {
-      console.log("🚀 API CALL usePostsByCategory:", {
-        categorySlug,
-        page,
-        url: `/posts/by_category/?slug=${categorySlug}&page=${page}`
-      });
-
-      return api.posts.getByCategory(categorySlug, page);
-    },
+    queryFn: () => api.posts.getByCategory(categorySlug, page),
     enabled: !!categorySlug,
   });
 }
-
 
 // Pages hooks
 export function usePages() {
@@ -85,10 +68,20 @@ export function usePage(slug: string) {
 }
 
 // Documents hooks
+// export function useDocuments(params?: { page?: number; doc_type?: string; search?: string }) {
+//   return useQuery({
+//     queryKey: ['documents', params],
+//     queryFn: () => api.documents.getAll(params),
+//   });
+// }
+
 export function useDocuments(params?: { page?: number; doc_type?: string; search?: string }) {
   return useQuery({
     queryKey: ['documents', params],
-    queryFn: () => api.documents.getAll(params),
+    queryFn: async () => {
+      const response = await api.documents.getAll(params);
+      return response;
+    },
   });
 }
 
@@ -153,10 +146,26 @@ export function useStaffMember(id: number) {
 }
 
 // Photo Albums hooks
-export function usePhotoAlbums() {
+// export function usePhotoAlbums() {
+//   return useQuery({
+//     queryKey: ['photoAlbums'],
+//     queryFn: api.photoAlbums.getAll,
+//   });
+// }
+
+// // Videos hooks
+// export function useVideos() {
+//   return useQuery({
+//     queryKey: ['videos'],
+//     queryFn: api.videos.getAll,
+//   });
+// }
+
+export function usePhotoAlbums(page: number) {
   return useQuery({
-    queryKey: ['photoAlbums'],
-    queryFn: api.photoAlbums.getAll,
+    queryKey: ['photoAlbums', page],
+    queryFn: () => api.photoAlbums.getAll(page),
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -168,11 +177,11 @@ export function usePhotoAlbum(slug: string) {
   });
 }
 
-// Videos hooks
-export function useVideos() {
+export function useVideos(page: number) {
   return useQuery({
-    queryKey: ['videos'],
-    queryFn: api.videos.getAll,
+    queryKey: ['videos', page],
+    queryFn: () => api.videos.getAll(page),
+    placeholderData: (previousData) => previousData,
   });
 }
 

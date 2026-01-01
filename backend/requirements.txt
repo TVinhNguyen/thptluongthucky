@@ -19,3 +19,7 @@ python-slugify
 # --- Editor ---
 # Django CKEditor 5 - Modern WYSIWYG editor
 django-ckeditor-5
+
+# --- Media storage (Cloudinary) ---
+cloudinary
+django-cloudinary-storage
