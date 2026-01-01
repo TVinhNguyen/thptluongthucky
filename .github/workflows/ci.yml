@@ -159,6 +159,32 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Create .env file for Docker Compose
+      run: |
+        cat > .env << EOF
+        # Database
+        POSTGRES_USER=postgres
+        POSTGRES_PASSWORD=postgres
+        POSTGRES_DB=thptluongthucky
+        DB_HOST=db
+        DB_PORT=5432
+        DB_NAME=thptluongthucky
+        DB_USER=postgres
+        DB_PASSWORD=postgres
+        
+        # Django
+        SECRET_KEY=ci-test-secret-key-do-not-use-in-production
+        DEBUG=False
+        ALLOWED_HOSTS=*
+        
+        # Media and Static
+        MEDIA_ROOT=/app/media
+        STATIC_ROOT=/app/staticfiles
+        
+        # API
+        VITE_API_URL=http://localhost:8000/api
+        EOF
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
