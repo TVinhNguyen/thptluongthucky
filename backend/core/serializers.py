@@ -3,7 +3,7 @@ from .models import (
     Category, Post, Page, Document, Department, Staff,
     PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage
 )
-
+from cloudinary.utils import cloudinary_url
 
 class CategorySerializer(serializers.ModelSerializer):
     """Serializer cho danh mục"""
@@ -23,21 +23,23 @@ class CategorySerializer(serializers.ModelSerializer):
 class PostListSerializer(serializers.ModelSerializer):
     """Serializer cho danh sách bài viết (tóm tắt)"""
     category_name = serializers.CharField(source='category.name', read_only=True)
+    category_slug = serializers.CharField(source='category.slug', read_only=True)
     
     class Meta:
         model = Post
         fields = ['id', 'title', 'slug', 'summary', 'thumbnail', 'category', 
-                  'category_name', 'is_featured', 'views', 'status', 'published_at']
+                  'category_name', 'category_slug', 'is_featured', 'views', 'status', 'published_at']
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
     """Serializer cho chi tiết bài viết"""
     category_name = serializers.CharField(source='category.name', read_only=True)
+    category_slug = serializers.CharField(source='category.slug', read_only=True)
     
     class Meta:
         model = Post
         fields = ['id', 'title', 'slug', 'summary', 'content', 'thumbnail', 
-                  'category', 'category_name', 'is_featured', 'views', 
+                  'category', 'category_name', 'category_slug', 'is_featured', 'views', 
                   'status', 'published_at', 'created_at', 'updated_at']
 
 
@@ -83,36 +85,60 @@ class StaffSerializer(serializers.ModelSerializer):
 
 
 class PhotoSerializer(serializers.ModelSerializer):
-    """Serializer cho ảnh"""
-    
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Photo
-        fields = ['id', 'image', 'caption', 'sort_order', 'uploaded_at']
+        fields = ["id", "image", "image_url", "caption", "sort_order", "uploaded_at"]
+
+    def get_image_url(self, obj):
+        # CloudinaryField (đầy đủ https://res.cloudinary.com/...)
+        try:
+            if obj.image and getattr(obj.image, "url", None):
+                return obj.image.url
+        except Exception:
+            pass
+
+        public_id = str(obj.image) if obj.image else ""
+        if not public_id:
+            return None
+
+        url, _ = cloudinary_url(public_id)
+        return url
 
 
 class PhotoAlbumListSerializer(serializers.ModelSerializer):
     """Serializer cho danh sách album (không bao gồm ảnh)"""
     photo_count = serializers.SerializerMethodField()
-    
+    cover_image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = PhotoAlbum
-        fields = ['id', 'name', 'slug', 'description', 'cover_image', 
+        fields = ['id', 'name', 'slug', 'description', 'cover_image', "cover_image_url", 
                   'created_at', 'photo_count']
     
     def get_photo_count(self, obj):
         """Đếm số ảnh trong album"""
         return obj.photos.count()
+    
+    def get_cover_image_url(self, obj):
+        return getattr(obj.cover_image, "url", None) if obj.cover_image else None
 
 
 class PhotoAlbumDetailSerializer(serializers.ModelSerializer):
-    """Serializer cho chi tiết album (bao gồm tất cả ảnh)"""
     photos = PhotoSerializer(many=True, read_only=True)
-    
+    cover_image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = PhotoAlbum
-        fields = ['id', 'name', 'slug', 'description', 'cover_image', 
-                  'created_at', 'photos']
+        fields = [
+            "id", "name", "slug", "description",
+            "cover_image", "cover_image_url",
+            "created_at", "photos"
+        ]
 
+    def get_cover_image_url(self, obj):
+        return getattr(obj.cover_image, "url", None) if obj.cover_image else None
 
 class VideoSerializer(serializers.ModelSerializer):
     """Serializer cho video"""

@@ -21,6 +21,7 @@ export interface Post {
   thumbnail: string | null;
   category: number | null;
   category_name: string;
+  category_slug: string;
   is_featured: boolean;
   views: number;
   status: string;
@@ -82,6 +83,7 @@ export interface PhotoAlbum {
   slug: string;
   description: string;
   cover_image: string | null;
+  cover_image_url?: string | null;
   created_at: string;
   photo_count?: number;
   photos?: Photo[];
@@ -90,7 +92,9 @@ export interface PhotoAlbum {
 export interface Photo {
   id: number;
   image: string;
+  image_url?: string;
   caption: string;
+  title?: string;
   sort_order: number;
   uploaded_at: string;
 }
@@ -99,7 +103,8 @@ export interface Video {
   id: number;
   title: string;
   video_url: string;
-  thumbnail: string | null;
+  video_file?: {url: string} | string;
+  thumbnail?: {url: string} | string | null;
   description: string;
   is_featured: boolean;
   created_at: string;
@@ -224,13 +229,13 @@ export const api = {
 
   // Photo Albums
   photoAlbums: {
-    getAll: () => fetchAPI<PhotoAlbum[]>('/photo-albums/'),
+    getAll: (page = 1) => fetchAPI<Paginated<PhotoAlbum>>(`/photo-albums/?page=${page}`),
     getBySlug: (slug: string) => fetchAPI<PhotoAlbum>(`/photo-albums/${slug}/`),
   },
 
   // Videos
   videos: {
-    getAll: () => fetchAPI<Video[]>('/videos/'),
+    getAll: (page = 1) => fetchAPI<Paginated<Video>>(`/videos/?page=${page}`),
     getFeatured: () => fetchAPI<Video[]>('/videos/featured/'),
     getById: (id: number) => fetchAPI<Video>(`/videos/${id}/`),
   },
@@ -281,3 +286,10 @@ export function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
+
+export type Paginated<T> = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+};

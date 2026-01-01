@@ -1,59 +1,38 @@
-import { useParams, useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
-import NewsCard from "@/components/NewsCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { usePostsByCategory } from "@/hooks/useApi";
-import { formatDate } from "@/lib/api";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { usePhotoAlbums } from "@/hooks/useApi";
+import { formatDate, type PhotoAlbum } from "@/lib/api";
 
-const CategoryList = () => {
-  const { category } = useParams();
+const PhotoAlbumListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const currentPage = parseInt(searchParams.get('page') || '1');
-  
-  const { data, isLoading, error } = usePostsByCategory(category || '', currentPage);
-  const categoryNames: Record<string, string> = {
-    "tin-moi-nhat": "Tin mới nhất",
-    "su-kien": "Sự kiện",
-    "hoat-dong-doan-the": "Hoạt động Đoàn thể",
-    "ke-hoach-giao-duc": "Kế hoạch giáo dục",
-    "thi-kiem-tra": "Thi - Kiểm tra",
-    "thoi-khoa-bieu": "Thời khóa biểu",
-    "chuong-trinh-hoc": "Chương trình học",
-    "tai-lieu": "Tài liệu",
-    "video": "Video",
-    "anh": "Ảnh",
-  };
+  const currentPage = parseInt(searchParams.get("page") || "1");
 
-  const categoryTitle = categoryNames[category || ""] || category?.replace(/-/g, " ") || "Danh sách";
+  const { data, isLoading, error } = usePhotoAlbums(currentPage);
+
+  const totalPages = data ? Math.ceil(data.count / 10) : 0;
 
   const handlePageChange = (page: number) => {
     setSearchParams({ page: page.toString() });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  const totalPages = data ? Math.ceil(data.count / 10) : 0;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <Navigation />
-      
+
       <div className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
-          <Breadcrumb
-            items={[
-              { label: "Chuyên mục", href: "/" },
-              { label: categoryTitle },
-            ]}
-          />
-          
+          <Breadcrumb items={[{ label: "Chuyên mục", href: "/" }, { label: "Ảnh" }]} />
+
           <h1 className="text-3xl font-bold text-foreground mb-6 animate-fade-in">
-            {categoryTitle}
+            Ảnh
           </h1>
 
           {isLoading ? (
@@ -63,30 +42,50 @@ const CategoryList = () => {
                   <Skeleton className="aspect-video w-full" />
                   <Skeleton className="h-6 w-3/4" />
                   <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-1/4" />
                 </div>
               ))}
             </div>
           ) : error ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Không thể tải danh sách bài viết</p>
+              <p className="text-muted-foreground">Không thể tải thư viện ảnh</p>
             </div>
-          ) : data?.results && data.results.length > 0 ? (
+          ) : data?.results?.length ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {data.results.map((post) => (
-                  <NewsCard
-                    key={post.id}
-                    id={post.slug}
-                    title={post.title}
-                    date={formatDate(post.published_at)}
-                    excerpt={post.summary}
-                    image={post.thumbnail}
-                  />
+                {data.results.map((album: PhotoAlbum) => (
+                  <Link
+                    key={album.id}
+                    to={`/chuyen-muc/anh/${album.slug}`}
+                    className="block"
+                  >
+                    <div className="rounded-xl border bg-card overflow-hidden">
+                      <div className="aspect-video bg-muted">
+                        <img
+                          src={album.cover_image_url || '/placeholder.svg'}
+                          alt={album.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+
+                      <div className="p-4">
+                        <div className="font-semibold text-foreground line-clamp-2">
+                          {album.name}
+                        </div>
+                        {album.description && (
+                          <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                            {album.description}
+                          </div>
+                        )}
+                        <div className="text-xs text-muted-foreground mt-2">
+                          {album.created_at ? formatDate(album.created_at) : ""}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
                 ))}
               </div>
-              
-              {/* Pagination */}
+
               {totalPages > 1 && (
                 <div className="flex justify-center items-center gap-2 mt-8">
                   <Button
@@ -98,11 +97,11 @@ const CategoryList = () => {
                     <ChevronLeft className="w-4 h-4" />
                     Trước
                   </Button>
-                  
+
                   <span className="px-4 text-sm text-muted-foreground">
                     Trang {currentPage} / {totalPages}
                   </span>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -117,15 +116,15 @@ const CategoryList = () => {
             </>
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Chưa có bài viết nào trong chuyên mục này</p>
+              <p className="text-muted-foreground">Chưa có album ảnh</p>
             </div>
           )}
         </div>
       </div>
-      
+
       <Footer />
     </div>
   );
 };
 
-export default CategoryList;
+export default PhotoAlbumListPage;

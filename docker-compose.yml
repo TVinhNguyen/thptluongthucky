@@ -12,7 +12,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
+    ports:
+      - "5432:5432"
   backend:
     build: ./backend
     command: >  
@@ -36,7 +37,7 @@ services:
       context: ./frontend
       target: development
     ports:
-      - "5173:5173"
+      - "8080:8080"
     volumes:
       - ./frontend:/app
       - /app/node_modules
