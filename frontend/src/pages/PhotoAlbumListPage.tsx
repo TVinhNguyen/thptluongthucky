@@ -61,7 +61,7 @@ const PhotoAlbumListPage = () => {
                     <div className="rounded-xl border bg-card overflow-hidden">
                       <div className="aspect-video bg-muted">
                         <img
-                          src={album.cover_image_url?.url || album.cover_image_url}
+                          src={album.cover_image_url || '/placeholder.svg'}
                           alt={album.name}
                           className="w-full h-full object-cover"
                           loading="lazy"

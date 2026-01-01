@@ -82,6 +82,7 @@ export interface PhotoAlbum {
   slug: string;
   description: string;
   cover_image: string | null;
+  cover_image_url?: string | null;
   created_at: string;
   photo_count?: number;
   photos?: Photo[];
@@ -90,7 +91,9 @@ export interface PhotoAlbum {
 export interface Photo {
   id: number;
   image: string;
+  image_url?: string;
   caption: string;
+  title?: string;
   sort_order: number;
   uploaded_at: string;
 }
@@ -99,7 +102,8 @@ export interface Video {
   id: number;
   title: string;
   video_url: string;
-  thumbnail: string | null;
+  video_file?: {url: string} | string;
+  thumbnail?: {url: string} | string | null;
   description: string;
   is_featured: boolean;
   created_at: string;
