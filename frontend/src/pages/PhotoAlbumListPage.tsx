@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { usePhotoAlbums } from "@/hooks/useApi";
-import { formatDate } from "@/lib/api";
+import { formatDate, type PhotoAlbum } from "@/lib/api";
 
 const PhotoAlbumListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -52,7 +52,7 @@ const PhotoAlbumListPage = () => {
           ) : data?.results?.length ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {data.results.map((album: any) => (
+                {data.results.map((album: PhotoAlbum) => (
                   <Link
                     key={album.id}
                     to={`/chuyen-muc/anh/${album.slug}`}

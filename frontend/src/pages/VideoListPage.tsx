@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { useVideos } from "@/hooks/useApi";
-import { formatDate } from "@/lib/api";
+import { formatDate, type Video } from "@/lib/api";
 
 const VideoListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -51,7 +51,7 @@ const VideoListPage = () => {
           ) : data?.results?.length ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {data.results.map((v: any) => {
+                {data.results.map((v: Video) => {
                   const videoLink = v.video_url || v.video_file?.url || v.video_file;
                   const thumb = v.thumbnail?.url || v.thumbnail;
 
