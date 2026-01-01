@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import { useMemo } from "react";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -12,6 +13,19 @@ import { formatDate, getMediaUrl } from "@/lib/api";
 const PostDetail = () => {
   const { id } = useParams();
   const { data: post, isLoading, error } = usePost(id || '');
+
+  // Process content to add backend URL to image sources
+  const processedContent = useMemo(() => {
+    if (!post?.content) return '';
+    
+    const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8000';
+    
+    // Replace all image src that start with /media/ with full URL
+    return post.content.replace(
+      /src="\/media\//g,
+      `src="${baseUrl}/media/`
+    );
+  }, [post?.content]);
 
   if (isLoading) {
     return (
@@ -121,8 +135,8 @@ const PostDetail = () => {
                 )}
 
                 <div 
-                  className="prose prose-slate max-w-none"
-                  dangerouslySetInnerHTML={{ __html: post.content || '' }}
+                  className="ck-content"
+                  dangerouslySetInnerHTML={{ __html: processedContent }}
                 />
               </div>
             </Card>
