@@ -21,6 +21,7 @@ export interface Post {
   thumbnail: string | null;
   category: number | null;
   category_name: string;
+  category_slug: string;
   is_featured: boolean;
   views: number;
   status: string;

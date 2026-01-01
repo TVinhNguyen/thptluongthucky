@@ -23,21 +23,23 @@ class CategorySerializer(serializers.ModelSerializer):
 class PostListSerializer(serializers.ModelSerializer):
     """Serializer cho danh sách bài viết (tóm tắt)"""
     category_name = serializers.CharField(source='category.name', read_only=True)
+    category_slug = serializers.CharField(source='category.slug', read_only=True)
     
     class Meta:
         model = Post
         fields = ['id', 'title', 'slug', 'summary', 'thumbnail', 'category', 
-                  'category_name', 'is_featured', 'views', 'status', 'published_at']
+                  'category_name', 'category_slug', 'is_featured', 'views', 'status', 'published_at']
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
     """Serializer cho chi tiết bài viết"""
     category_name = serializers.CharField(source='category.name', read_only=True)
+    category_slug = serializers.CharField(source='category.slug', read_only=True)
     
     class Meta:
         model = Post
         fields = ['id', 'title', 'slug', 'summary', 'content', 'thumbnail', 
-                  'category', 'category_name', 'is_featured', 'views', 
+                  'category', 'category_name', 'category_slug', 'is_featured', 'views', 
                   'status', 'published_at', 'created_at', 'updated_at']
 
 
