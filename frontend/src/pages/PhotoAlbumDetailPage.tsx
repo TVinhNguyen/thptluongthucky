@@ -7,7 +7,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { usePhotoAlbum } from "@/hooks/useApi";
-import { formatDate } from "@/lib/api";
+import { formatDate, type Photo } from "@/lib/api";
 import { X, ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
@@ -117,7 +117,7 @@ const PhotoAlbumDetailPage = () => {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
-                {(photos || []).map((photo: any, idx: number) => (
+                {(photos || []).map((photo: Photo, idx: number) => (
                   <div
                     key={photo.id}
                     className="rounded-xl border bg-card overflow-hidden"
