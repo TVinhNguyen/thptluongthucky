@@ -1,10 +1,11 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import F
+from django.utils.translation import gettext_lazy as _
 
 from .models import (
     Category, Post, Page, Document, Department, Staff,
@@ -12,7 +13,8 @@ from .models import (
 )
 from .serializers import (
     CategorySerializer, PostListSerializer, PostDetailSerializer,
-    PageSerializer, DocumentSerializer, DepartmentSerializer, StaffSerializer,
+    PageSerializer, DocumentSerializer, DocumentCreateUpdateSerializer,
+    DepartmentSerializer, StaffSerializer,
     PhotoAlbumListSerializer, PhotoAlbumDetailSerializer, PhotoSerializer,
     VideoSerializer, BannerSerializer, ExternalLinkSerializer, ContactMessageSerializer
 )
@@ -128,35 +130,68 @@ class PageViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
 
-class DocumentViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    API endpoint để xem văn bản
-    - list: Danh sách văn bản
-    - retrieve: Chi tiết văn bản
-    - download: Tải văn bản (tăng download_count)
-    """
+class DocumentViewSet(viewsets.ModelViewSet):
+    """Document API - Full CRUD with file upload"""
+    
     queryset = Document.objects.all().order_by('-published_date', '-created_at')
-    serializer_class = DocumentSerializer
-    permission_classes = [AllowAny]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['doc_type']
-    search_fields = ['title', 'code', 'signer']
+    search_fields = ['title', 'code', 'signer', 'description']
+    ordering_fields = ['published_date', 'created_at', 'download_count']
+    
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return DocumentCreateUpdateSerializer
+        return DocumentSerializer
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve', 'download']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
     
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
-        return Response({
-            "results": serializer.data
-        })
+        return Response({"count": queryset.count(), "results": serializer.data})
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
         
-    @action(detail=True, methods=['post'])
+        read_serializer = DocumentSerializer(serializer.instance)
+        return Response(read_serializer.data, status=status.HTTP_201_CREATED)
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        read_serializer = DocumentSerializer(serializer.instance)
+        return Response(read_serializer.data)
+    
+    @action(detail=True, methods=['post'], permission_classes=[AllowAny])
     def download(self, request, pk=None):
-        """Tăng số lượt tải khi người dùng download"""
+        """Download + increment counter"""
         document = self.get_object()
         Document.objects.filter(pk=document.pk).update(download_count=F('download_count') + 1)
         document.refresh_from_db()
+        
         serializer = self.get_serializer(document)
         return Response(serializer.data)
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            self.perform_destroy(instance)
+            return Response({'detail': _('Document deleted')}, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):

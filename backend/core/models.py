@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django_ckeditor_5.fields import CKEditor5Field
 from .utils import slugify_vietnamese
+from .validators import document_file_validator
 from cloudinary.models import CloudinaryField
 
 # Create your models here.
@@ -90,30 +91,54 @@ class Page(models.Model):
 
 class Document(models.Model):
     """Văn bản & Tài liệu"""
+    
     DOC_TYPE_CHOICES = [
         ('CONG_VAN', 'Công văn'),
         ('QUYET_DINH', 'Quyết định'),
         ('TKB', 'Thời khóa biểu'),
         ('BIEU_MAU', 'Biểu mẫu'),
+        ('OTHER', 'Khác'),
     ]
     
     code = models.CharField(max_length=50, blank=True, verbose_name="Số hiệu văn bản")
     title = models.CharField(max_length=500, verbose_name="Tiêu đề")
-    doc_type = models.CharField(max_length=50, choices=DOC_TYPE_CHOICES, verbose_name="Loại văn bản")
-    file = models.FileField(upload_to='documents/', verbose_name="File đính kèm")
-    file_size = models.IntegerField(default=0, verbose_name="Kích thước (KB)")
+    doc_type = models.CharField(max_length=50, choices=DOC_TYPE_CHOICES, default='OTHER', verbose_name="Loại văn bản")
+    file = CloudinaryField("File đính kèm", resource_type="raw", validators=[document_file_validator])
+    file_size = models.IntegerField(default=0, editable=False, verbose_name="Kích thước (KB)")
+    description = models.TextField(blank=True, verbose_name="Mô tả")
     published_date = models.DateField(null=True, blank=True, verbose_name="Ngày ban hành")
     signer = models.CharField(max_length=100, blank=True, verbose_name="Người ký")
-    download_count = models.IntegerField(default=0, verbose_name="Lượt tải")
+    download_count = models.IntegerField(default=0, editable=False, verbose_name="Lượt tải")
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         verbose_name = "Văn bản"
         verbose_name_plural = "Công văn - Văn bản"
         ordering = ['-published_date', '-created_at']
+        indexes = [
+            models.Index(fields=['-published_date']),
+            models.Index(fields=['doc_type']),
+        ]
     
-    def __str__(self):
-        return self.title
+    def __str__(self) -> str:
+        return f"{self.code} - {self.title}" if self.code else self.title
+    
+    def save(self, *args, **kwargs) -> None:
+        if self.file:
+            try:
+                self.file_size = max(1, (self.file.size or 0) // 1024)
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
+    
+    @property
+    def file_url(self) -> str:
+        return getattr(self.file, 'url', '') if self.file else ''
+    
+    @property
+    def file_name(self) -> str:
+        return self.file.name.split('/')[-1] if self.file else ''
 
 
 class Department(models.Model):

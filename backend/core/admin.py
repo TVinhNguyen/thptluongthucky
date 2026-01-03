@@ -86,11 +86,45 @@ class PageAdmin(ModelAdmin):
 
 @admin.register(Document)
 class DocumentAdmin(ModelAdmin):
-    list_display = ['title', 'code', 'doc_type', 'published_date', 'signer', 'download_count']
-    list_filter = ['doc_type', 'published_date']
-    search_fields = ['title', 'code', 'signer']
+    """Admin interface - Document CRUD"""
+    
+    list_display = ['title', 'code', 'doc_type', 'published_date', 'signer', 'download_count', 'file_size']
+    list_filter = ['doc_type', 'published_date', 'created_at']
+    search_fields = ['title', 'code', 'signer', 'description']
     date_hierarchy = 'published_date'
     ordering = ['-published_date', '-created_at']
+    readonly_fields = ['file_size', 'download_count', 'created_at', 'updated_at', 'file_url_display']
+    
+    fieldsets = (
+        ('Thông tin', {
+            'fields': ('code', 'title', 'doc_type')
+        }),
+        ('File', {
+            'fields': ('file', 'file_size', 'file_url_display'),
+        }),
+        ('Metadata', {
+            'fields': ('published_date', 'signer', 'description')
+        }),
+        ('Thống kê', {
+            'fields': ('download_count', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    actions = ['reset_download_count']
+    
+    def file_url_display(self, obj):
+        if obj.file_url:
+            from django.utils.html import format_html
+            return format_html('<a href="{}" target="_blank">View file</a>', obj.file_url)
+        return 'No file'
+    
+    file_url_display.short_description = 'Link'
+    
+    @admin.action(description='Reset download count')
+    def reset_download_count(self, request, queryset):
+        updated = queryset.update(download_count=0)
+        self.message_user(request, f'{updated} document(s) reset.')
 
 
 @admin.register(Department)
