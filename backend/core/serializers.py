@@ -106,6 +106,13 @@ class DocumentCreateUpdateSerializer(serializers.ModelSerializer):
         if not value or not value.strip():
             raise serializers.ValidationError("Tiêu đề là bắt buộc.")
         return value.strip()
+    
+    def create(self, validated_data):
+        # Capture original filename from the uploaded file
+        file_obj = validated_data.get('file')
+        if file_obj:
+            validated_data['original_filename'] = file_obj.name
+        return super().create(validated_data)
 
 
 class DepartmentSerializer(serializers.ModelSerializer):

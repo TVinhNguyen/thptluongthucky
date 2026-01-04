@@ -109,6 +109,7 @@ class Document(models.Model):
     published_date = models.DateField(null=True, blank=True, verbose_name="Ngày ban hành")
     signer = models.CharField(max_length=100, blank=True, verbose_name="Người ký")
     download_count = models.IntegerField(default=0, editable=False, verbose_name="Lượt tải")
+    original_filename = models.CharField(max_length=255, blank=True, verbose_name="Tên file gốc")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -128,6 +129,9 @@ class Document(models.Model):
         if self.file:
             try:
                 self.file_size = max(1, (self.file.size or 0) // 1024)
+                # Capture original filename from CloudinaryField
+                if hasattr(self.file, 'name') and not self.original_filename:
+                    self.original_filename = self.file.name.split('/')[-1]
             except Exception:
                 pass
         super().save(*args, **kwargs)
@@ -138,7 +142,16 @@ class Document(models.Model):
     
     @property
     def file_name(self) -> str:
-        return self.file.name.split('/')[-1] if self.file else ''
+        if self.original_filename:
+            return self.original_filename
+        if not self.file:
+            return ''
+        # Fallback to public_id if original_filename not set
+        if hasattr(self.file, 'public_id'):
+            return self.file.public_id.split('/')[-1] + '.docx'  # Default extension
+        if hasattr(self.file, 'name'):
+            return self.file.name.split('/')[-1]
+        return ''
 
 
 class Department(models.Model):

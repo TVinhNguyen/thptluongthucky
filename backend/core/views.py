@@ -187,11 +187,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
     
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        try:
-            self.perform_destroy(instance)
-            return Response({'detail': _('Document deleted')}, status=status.HTTP_204_NO_CONTENT)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_destroy(instance)
+        return Response({'detail': _('Document deleted')}, status=status.HTTP_204_NO_CONTENT)
 
 
 class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):
