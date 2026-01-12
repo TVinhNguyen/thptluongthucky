@@ -46,12 +46,18 @@ export interface Document {
   code: string;
   title: string;
   doc_type: 'CONG_VAN' | 'QUYET_DINH' | 'TKB' | 'BIEU_MAU';
+  doc_type_display: string;
   file: string;
+  file_url: string;
+  file_name: string;
   file_size: number;
+  formatted_file_size: string;
+  description?: string;
   published_date: string;
   signer: string;
   download_count: number;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Department {

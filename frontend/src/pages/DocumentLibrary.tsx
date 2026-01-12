@@ -4,12 +4,13 @@ import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
+import { DocumentViewer } from "@/components/DocumentViewer";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, FileText, Download } from "lucide-react";
+import { Search, FileText, Download, Eye } from "lucide-react";
 import { useDocuments, useDownloadDocument } from "@/hooks/useApi";
 import { formatDate, formatFileSize, getMediaUrl } from "@/lib/api";
 import type { Document } from "@/lib/api";
@@ -18,6 +19,7 @@ const DocumentLibrary = () => {
   const [searchTerm, setSearchTerm] = useState<string | undefined>(undefined);
   const [searchInput, setSearchInput] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "CONG_VAN" | "QUYET_DINH">("all");
+  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
 
   const { type } = useParams<{ type?: string }>();
 
@@ -41,7 +43,15 @@ const DocumentLibrary = () => {
   const handleDownload = async (doc: Document) => {
     try {
       await downloadMutation.mutateAsync(doc.id);
-      window.open(getMediaUrl(doc.file), "_blank");
+      // Use file_url directly (already a complete Cloudinary URL)
+      const downloadUrl = doc.file_url || doc.file;
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = doc.file_name || doc.title;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       // console.error("Download error:", error);
     }
@@ -73,15 +83,25 @@ const DocumentLibrary = () => {
               </p>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDownload(doc)}
-            disabled={downloadMutation.isPending}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Tải xuống
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedDoc(doc)}
+              title="Xem trước"
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDownload(doc)}
+              disabled={downloadMutation.isPending}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Tải xuống
+            </Button>
+          </div>
         </div>
       ))}
     </div>
@@ -193,6 +213,12 @@ const DocumentLibrary = () => {
           </div>
         </div>
       </div>
+
+      <DocumentViewer
+        document={selectedDoc}
+        open={!!selectedDoc}
+        onOpenChange={(open) => !open && setSelectedDoc(null)}
+      />
 
       <Footer />
     </div>

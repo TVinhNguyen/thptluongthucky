@@ -3,7 +3,9 @@ from .models import (
     Category, Post, Page, Document, Department, Staff,
     PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage
 )
+from .validators import document_file_validator
 from cloudinary.utils import cloudinary_url
+from typing import Optional
 
 class CategorySerializer(serializers.ModelSerializer):
     """Serializer cho danh mục"""
@@ -53,12 +55,64 @@ class PageSerializer(serializers.ModelSerializer):
 
 
 class DocumentSerializer(serializers.ModelSerializer):
-    """Serializer cho văn bản"""
+    """Document serializer - read only"""
+    
+    file_url = serializers.SerializerMethodField()
+    file_name = serializers.SerializerMethodField()
+    formatted_file_size = serializers.SerializerMethodField()
+    doc_type_display = serializers.CharField(source='get_doc_type_display', read_only=True)
     
     class Meta:
         model = Document
-        fields = ['id', 'code', 'title', 'doc_type', 'file', 'file_size', 
-                  'published_date', 'signer', 'download_count', 'created_at']
+        fields = [
+            'id', 'code', 'title', 'doc_type', 'doc_type_display',
+            'file', 'file_url', 'file_name', 'file_size', 'formatted_file_size',
+            'published_date', 'signer', 'description', 'download_count', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'file_size', 'download_count', 'created_at', 'updated_at']
+    
+    def get_file_url(self, obj):
+        try:
+            return obj.file.url if (obj.file and hasattr(obj.file, 'url')) else None
+        except Exception:
+            if obj.file:
+                from cloudinary.utils import cloudinary_url
+                url, _ = cloudinary_url(str(obj.file), resource_type='raw')
+                return url
+            return None
+    
+    def get_file_name(self, obj):
+        return obj.file_name
+    
+    def get_formatted_file_size(self, obj):
+        size = obj.file_size
+        if size < 1024:
+            return f"{size} KB"
+        elif size < 1024 * 1024:
+            return f"{size / 1024:.1f} MB"
+        return f"{size / (1024 * 1024):.1f} GB"
+
+
+class DocumentCreateUpdateSerializer(serializers.ModelSerializer):
+    """Document serializer - write/create/update"""
+    
+    file = serializers.FileField(required=True, validators=[document_file_validator])
+    
+    class Meta:
+        model = Document
+        fields = ['code', 'title', 'doc_type', 'file', 'published_date', 'signer', 'description']
+    
+    def validate_title(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Tiêu đề là bắt buộc.")
+        return value.strip()
+    
+    def create(self, validated_data):
+        # Capture original filename from the uploaded file
+        file_obj = validated_data.get('file')
+        if file_obj:
+            validated_data['original_filename'] = file_obj.name
+        return super().create(validated_data)
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
