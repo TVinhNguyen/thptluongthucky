@@ -1,58 +1,26 @@
+import { useState } from "react";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getMediaUrl, type Department, type Staff } from "@/lib/api";
+import { useDepartments, useDepartmentStaff, useStaff } from "@/hooks/useApi";
+import DepartmentCard from "./DepartmentCard";
 
 const OrgChart = () => {
-  const leadership = [
-    {
-      name: "Nguyễn Văn A",
-      position: "Hiệu trưởng",
-      phone: "0123.456.789",
-      email: "hieutruong@truong.edu.vn",
-    },
-  ];
+  const POSITION_PRINCIPAL = 'Hiệu trưởng';
+  const POSITION_VICE_PRINCIPAL = 'Phó hiệu trưởng';
 
-  const viceLeadership = [
-    {
-      name: "Trần Thị B",
-      position: "Phó Hiệu trưởng",
-      phone: "0123.456.788",
-      email: "pho1@truong.edu.vn",
-    },
-    {
-      name: "Lê Văn C",
-      position: "Phó Hiệu trưởng",
-      phone: "0123.456.787",
-      email: "pho2@truong.edu.vn",
-    },
-  ];
+  const { data: principalList = [] } = useStaff({ position: POSITION_PRINCIPAL });
+  const leadership = principalList[0];
 
-  const departments = [
-    {
-      name: "Phòng Hành chính - Tổng hợp",
-      head: "Phạm Văn D",
-      members: ["Nguyễn Thị E", "Trần Văn F"],
-    },
-    {
-      name: "Phòng Giáo vụ",
-      head: "Hoàng Thị G",
-      members: ["Vũ Văn H", "Đặng Thị I", "Lý Văn K"],
-    },
-    {
-      name: "Tổ Văn - Sử - Địa",
-      head: "Mai Văn L",
-      members: ["Bùi Thị M", "Đinh Văn N", "Trương Thị O"],
-    },
-    {
-      name: "Tổ Toán - Lý - Hóa",
-      head: "Ngô Văn P",
-      members: ["Phan Thị Q", "Võ Văn R", "Lâm Thị S"],
-    },
-  ];
+  const { data: viceLeadership = [], isLoading: viceLoading } = useStaff({
+    position: POSITION_VICE_PRINCIPAL,
+  });
 
+  const { data: departments = [], isLoading: loadingDepartments } = useDepartments();
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -76,16 +44,16 @@ const OrgChart = () => {
               <Card className="bg-card shadow-card hover:shadow-card-hover transition-all hover-scale p-6 w-full max-w-md animate-fade-in">
                 <div className="flex flex-col items-center text-center">
                   <Avatar className="w-24 h-24 mb-4">
-                    <AvatarImage src="" />
+                    <AvatarImage src={leadership?.avatar ? getMediaUrl(leadership.avatar) : undefined} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                      {leadership[0].name.charAt(0)}
+                      {(leadership?.full_name || 'Unnamed Staff').charAt(0)}
                     </AvatarFallback>
                   </Avatar>
-                  <h3 className="text-xl font-semibold text-foreground">{leadership[0].name}</h3>
-                  <p className="text-primary font-medium mb-3">{leadership[0].position}</p>
+                  <h3 className="text-xl font-semibold text-foreground">{leadership?.full_name || 'Unnamed Staff'}</h3>
+                  <p className="text-primary font-medium mb-3">{leadership?.position || 'Position not specified'}</p>
                   <div className="text-sm text-muted-foreground space-y-1">
-                    <p>📞 {leadership[0].phone}</p>
-                    <p>✉️ {leadership[0].email}</p>
+                    <p>📞 {leadership?.phone}</p>
+                    <p>✉️ {leadership?.email}</p>
                   </div>
                 </div>
               </Card>
@@ -96,12 +64,12 @@ const OrgChart = () => {
                 <Card key={index} className="bg-card shadow-card hover:shadow-card-hover transition-all hover-scale p-6 animate-fade-in">
                   <div className="flex flex-col items-center text-center">
                     <Avatar className="w-20 h-20 mb-3">
-                      <AvatarImage src="" />
+                      <AvatarImage src={person.avatar ? getMediaUrl(person.avatar) : undefined} />
                       <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-                        {person.name.charAt(0)}
+                        {person.full_name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <h3 className="text-lg font-semibold text-foreground">{person.name}</h3>
+                    <h3 className="text-lg font-semibold text-foreground">{person.full_name}</h3>
                     <p className="text-primary font-medium mb-2">{person.position}</p>
                     <div className="text-sm text-muted-foreground space-y-1">
                       <p>📞 {person.phone}</p>
@@ -117,26 +85,8 @@ const OrgChart = () => {
           <section>
             <h2 className="text-2xl font-semibold text-foreground mb-4">Các phòng ban & Tổ chuyên môn</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {departments.map((dept, index) => (
-                <Card key={index} className="bg-card shadow-card hover:shadow-card-hover transition-all hover-scale overflow-hidden animate-fade-in">
-                  <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
-                    {dept.name}
-                  </div>
-                  <div className="p-4">
-                    <div className="mb-3">
-                      <p className="text-sm text-muted-foreground">Trưởng phòng/Tổ trưởng</p>
-                      <p className="font-semibold text-foreground">{dept.head}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-2">Thành viên</p>
-                      <ul className="space-y-1">
-                        {dept.members.map((member, idx) => (
-                          <li key={idx} className="text-foreground text-sm">• {member}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </Card>
+              {departments.map((dept: Department) => (
+                <DepartmentCard key={dept.id} dept={dept} />
               ))}
             </div>
           </section>

@@ -223,9 +223,10 @@ export const api = {
 
   // Staff
   staff: {
-    getAll: (params?: { department?: number; search?: string }) => {
+    getAll: (params?: { department?: number; position?: string; search?: string }) => {
       const searchParams = new URLSearchParams();
       if (params?.department) searchParams.set('department', params.department.toString());
+      if (params?.position) searchParams.set('position', params.position);
       if (params?.search) searchParams.set('search', params.search);
       const query = searchParams.toString();
       return fetchAPI<Staff[]>(`/staff/${query ? `?${query}` : ''}`);

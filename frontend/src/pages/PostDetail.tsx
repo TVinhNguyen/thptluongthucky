@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Calendar, User, Eye, Clock, ArrowRight } from "lucide-react";
 import { usePost, usePostsByCategory } from "@/hooks/useApi";
 import { formatDate, getMediaUrl } from "@/lib/api";
+import { prependMediaBaseUrl } from "@/lib/util";
 
 const PostDetail = () => {
   const { id } = useParams();
@@ -30,15 +31,7 @@ const PostDetail = () => {
 
   // Process content to add backend URL to image sources
   const processedContent = useMemo(() => {
-    if (!post?.content) return '';
-    
-    const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8000';
-    
-    // Replace all image src that start with /media/ with full URL
-    return post.content.replace(
-      /src="\/media\//g,
-      `src="${baseUrl}/media/`
-    );
+    return prependMediaBaseUrl(post?.content);
   }, [post?.content]);
 
   if (isLoading) {

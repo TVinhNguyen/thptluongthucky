@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -17,16 +17,47 @@ import {
 } from "@/components/ui/select";
 import { useStaff, useDepartments } from "@/hooks/useApi";
 import { getMediaUrl } from "@/lib/api";
+import { useLocation } from "react-router-dom";
+
+const normalizeSlug = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 
 const Staff = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  const location = useLocation();
   
   const { data: departments, isLoading: loadingDepartments } = useDepartments();
   const { data: staffList, isLoading: loadingStaff } = useStaff({
     department: selectedDepartment !== "all" ? parseInt(selectedDepartment) : undefined,
     search: searchTerm || undefined,
   });
+
+  const filterParam = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get("filter");
+  }, [location.search]);
+
+  useEffect(() => {
+    if (!filterParam || !departments?.length) return;
+
+    const matched = departments.find(
+      (dept) => normalizeSlug(dept.name) === normalizeSlug(filterParam)
+    );
+
+    if (matched) {
+      setSelectedDepartment(matched.id.toString());
+      console.log(setSelectedDepartment(matched.id.toString()));
+    } else {
+      // fallback: apply search term to narrow list if no department matched
+      setSearchTerm(filterParam.replace(/-/g, " "));
+    }
+  }, [filterParam, departments]);
 
   const filteredStaff = staffList?.filter(staff => 
     staff.full_name.toLowerCase().includes(searchTerm.toLowerCase())
