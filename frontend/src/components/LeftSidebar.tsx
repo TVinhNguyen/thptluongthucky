@@ -12,7 +12,7 @@ const LeftSidebar = () => {
         { label: "Đoàn Thanh niên", href: "/co-cau-to-chuc#doan-thanh-nien" },
         { label: "Tổ Văn Phòng", href: "/can-bo-giao-vien?filter=van-phong" },
         { label: "Tổ Chuyên môn", href: "/can-bo-giao-vien?filter=chuyen-mon" },
-        { label: "Ban thường trực Hội cha mẹ học sinh", href: "/co-cau-to-chuc#hoi-cha-me" },
+        { label: "Ban thường trực Hội cha mẹ học sinh", href: "/can-bo-giao-vien?filter=hoi-cha-me-hoc-sinh" },
       ],
     },
     {
