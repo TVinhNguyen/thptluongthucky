@@ -8,7 +8,8 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
+    --background: 214 47% 97%;
+    --bg: 214 47% 97%; /* Alias for background */
     --foreground: 220 15% 15%;
 
     --card: 0 0% 100%;
@@ -35,15 +36,15 @@ All colors MUST be HSL.
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
+    --border: 212 43% 93%;
+    --input: 212 43% 93%;
     --ring: 220 85% 45%;
 
     --radius: 0.5rem;
 
     /* Card shadows */
-    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
-    --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.12);
+    --shadow-card: 0 10px 24px rgba(16, 24, 40, 0.08);
+    --shadow-card-hover: 0 14px 32px rgba(16, 24, 40, 0.12);
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 15% 15%;
@@ -106,6 +107,7 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    background-color: hsl(var(--bg));
   }
   
   .scrollbar-hide::-webkit-scrollbar {

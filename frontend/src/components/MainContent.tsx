@@ -31,13 +31,13 @@ const MainContent = () => {
           <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
             Tin mới nhất
           </div>
-          <div className="p-4 space-y-3">
+          <div className="p-4 space-y-5">
             {loadingFeatured ? (
               <LoadingSkeleton />
             ) : featuredPosts && featuredPosts.length > 0 ? (
               featuredPosts.map((post) => (
+              <div key={post.id} className="mb-4 last:mb-0">
                 <NewsCard
-                  key={post.id}
                   id={post.slug}
                   title={post.title}
                   date={formatDate(post.published_at)}
@@ -45,7 +45,8 @@ const MainContent = () => {
                   image={post.thumbnail}
                   hasImage={!!post.thumbnail}
                 />
-              ))
+              </div>
+            ))
             ) : (
               <p className="text-muted-foreground text-sm italic">
                 Chưa có tin nổi bật
@@ -78,6 +79,7 @@ const MainContent = () => {
               <LoadingSkeleton />
             ) : planPosts?.results && planPosts.results.length > 0 ? (
               planPosts.results.slice(0, 5).map((post) => (
+                <div key={post.id} className="mb-4 last:mb-0">
                 <NewsCard
                   key={post.id}
                   id={post.slug}
@@ -85,6 +87,7 @@ const MainContent = () => {
                   date={formatDate(post.published_at)}
                   excerpt={post.summary}
                 />
+                </div>
               ))
             ) : (
               <p className="text-muted-foreground text-sm italic">
@@ -106,13 +109,15 @@ const MainContent = () => {
               <LoadingSkeleton />
             ) : activityPosts?.results && activityPosts.results.length > 0 ? (
               activityPosts.results.slice(0, 5).map((post) => (
-                <NewsCard
+                <div key={post.id} className="mb-4 last:mb-0">
+                  <NewsCard
                   key={post.id}
                   id={post.slug}
                   title={post.title}
                   date={formatDate(post.published_at)}
                   excerpt={post.summary}
                 />
+                </div>
               ))
             ) : (
               <p className="text-muted-foreground text-sm italic">
