@@ -7,7 +7,7 @@ import NewsCard from "@/components/NewsCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { usePostsByCategory, useCategories } from "@/hooks/useApi";
-import { formatDate } from "@/lib/api";
+import { formatDate, type Category } from "@/lib/api";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const CategoryList = () => {
@@ -21,7 +21,7 @@ const CategoryList = () => {
   // Build categoryNames mapping from database (including children)
   const categoryNames: Record<string, string> = {};
   if (categoriesData) {
-    const flattenCategories = (categories: any[]) => {
+    const flattenCategories = (categories: Category[]) => {
       categories.forEach((cat) => {
         categoryNames[cat.slug] = cat.name;
         // Recursively add children categories
