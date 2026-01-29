@@ -7,7 +7,8 @@ import { formatDate } from "@/lib/api";
 const MainContent = () => {
   const { data: featuredPosts, isLoading: loadingFeatured } = useFeaturedPosts();
   const { data: planPosts, isLoading: loadingPlan } = usePostsByCategory('ke-hoach-giao-duc');
-  const { data: activityPosts, isLoading: loadingActivity } = usePostsByCategory('hoat-dong-doan-the');
+  const { data: examPosts, isLoading: loadingExam } = usePostsByCategory('thi-tuyen-sinh');
+  const { data: activityPosts, isLoading: loadingActivity } = usePostsByCategory('hoat-dong-su-kien');
 
   const LoadingSkeleton = () => (
     <div className="space-y-3">
@@ -60,10 +61,28 @@ const MainContent = () => {
       <section>
         <Card className="bg-card shadow-card overflow-hidden">
           <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
-            Thi và Tuyển sinh
+            Thi & Tuyển sinh
           </div>
-          <div className="p-4">
-            <p className="text-muted-foreground text-sm italic">Nội dung đang được cập nhật...</p>
+          <div className="p-4 space-y-3">
+            {loadingExam ? (
+              <LoadingSkeleton />
+            ) : examPosts?.results && examPosts.results.length > 0 ? (
+              examPosts.results.slice(0, 3).map((post) => (
+                <div key={post.id} className="mb-4 last:mb-0">
+                  <NewsCard
+                    id={post.slug}
+                    title={post.title}
+                    date={formatDate(post.published_at)}
+                    excerpt={post.summary}
+                    image={post.thumbnail}
+                  />
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground text-sm italic">
+                Chưa có bài viết nào
+              </p>
+            )}
           </div>
         </Card>
       </section>
@@ -78,7 +97,7 @@ const MainContent = () => {
             {loadingPlan ? (
               <LoadingSkeleton />
             ) : planPosts?.results && planPosts.results.length > 0 ? (
-              planPosts.results.slice(0, 5).map((post) => (
+              planPosts.results.slice(0, 3).map((post) => (
                 <div key={post.id} className="mb-4 last:mb-0">
                 <NewsCard
                   key={post.id}
@@ -86,6 +105,7 @@ const MainContent = () => {
                   title={post.title}
                   date={formatDate(post.published_at)}
                   excerpt={post.summary}
+                  image={post.thumbnail}
                 />
                 </div>
               ))
@@ -108,7 +128,7 @@ const MainContent = () => {
             {loadingActivity ? (
               <LoadingSkeleton />
             ) : activityPosts?.results && activityPosts.results.length > 0 ? (
-              activityPosts.results.slice(0, 5).map((post) => (
+              activityPosts.results.slice(0, 3).map((post) => (
                 <div key={post.id} className="mb-4 last:mb-0">
                   <NewsCard
                   key={post.id}
@@ -116,6 +136,7 @@ const MainContent = () => {
                   title={post.title}
                   date={formatDate(post.published_at)}
                   excerpt={post.summary}
+                  image={post.thumbnail}
                 />
                 </div>
               ))

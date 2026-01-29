@@ -6,6 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import F
 from django.utils.translation import gettext_lazy as _
+import logging
 
 from .models import (
     Category, Post, Page, Document, Department, Staff,
@@ -18,6 +19,8 @@ from .serializers import (
     PhotoAlbumListSerializer, PhotoAlbumDetailSerializer, PhotoSerializer,
     VideoSerializer, BannerSerializer, ExternalLinkSerializer, ContactMessageSerializer
 )
+
+logger = logging.getLogger(__name__)
 
 class PostPagination(PageNumberPagination):
     page_size = 10  # bao nhiêu bài / 1 page
@@ -83,7 +86,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'], url_path='by_category')
     def by_category(self, request):
         """
-        Lấy bài viết theo slug danh mục.
+        Lấy bài viết theo slug danh mục (hỗ trợ cả category cha và con).
         Nếu slug = 'tin-moi-nhat' thì trả về tin mới nhất (không theo danh mục).
         """
         category_slug = request.query_params.get('slug')
@@ -104,7 +107,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        # Các danh mục bình thường
+        # Các danh mục bình thường (hỗ trợ cả parent và children)
         try:
             category = Category.objects.get(slug=category_slug)
         except Category.DoesNotExist:
@@ -112,7 +115,6 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
                 {'error': 'Không tìm thấy danh mục'},
                 status=status.HTTP_404_NOT_FOUND
             )
-
         posts = self.get_queryset().filter(category=category)
         page = self.paginate_queryset(posts)
         serializer = self.get_serializer(page, many=True)

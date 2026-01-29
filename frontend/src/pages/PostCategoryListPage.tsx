@@ -6,7 +6,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import NewsCard from "@/components/NewsCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { usePostsByCategory } from "@/hooks/useApi";
+import { usePostsByCategory, useCategories } from "@/hooks/useApi";
 import { formatDate } from "@/lib/api";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -16,21 +16,26 @@ const CategoryList = () => {
   const currentPage = parseInt(searchParams.get('page') || '1');
   
   const { data, isLoading, error } = usePostsByCategory(category || '', currentPage);
-  const categoryNames: Record<string, string> = {
-    "tin-moi-nhat": "Tin mới nhất",
-    "su-kien": "Sự kiện",
-    "hoat-dong-doan-the": "Hoạt động Đoàn thể",
-    "ke-hoach-giao-duc": "Kế hoạch giáo dục",
-    "thi-kiem-tra": "Thi - Kiểm tra",
-    "thoi-khoa-bieu": "Thời khóa biểu",
-    "chuong-trinh-hoc": "Chương trình học",
-    "tai-lieu": "Tài liệu",
-    "video": "Video",
-    "anh": "Ảnh",
-  };
+  const { data: categoriesData } = useCategories();
+  
+  // Build categoryNames mapping from database (including children)
+  const categoryNames: Record<string, string> = {};
+  if (categoriesData) {
+    const flattenCategories = (categories: any[]) => {
+      categories.forEach((cat) => {
+        categoryNames[cat.slug] = cat.name;
+        // Recursively add children categories
+        if (cat.children && cat.children.length > 0) {
+          flattenCategories(cat.children);
+        }
+      });
+    };
+    flattenCategories(categoriesData);
+  }
 
   const categoryTitle = categoryNames[category || ""] || category?.replace(/-/g, " ") || "Danh sách";
 
+  console.log(data);
   const handlePageChange = (page: number) => {
     setSearchParams({ page: page.toString() });
     window.scrollTo({ top: 0, behavior: 'smooth' });
