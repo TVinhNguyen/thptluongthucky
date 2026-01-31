@@ -187,9 +187,10 @@ export const api = {
     },
     getBySlug: (slug: string) => fetchAPI<Post>(`/posts/${slug}/`),
     getFeatured: () => fetchAPI<Post[]>('/posts/featured/'),
-    getByCategory: (categorySlug: string, page?: number) => {
+    getByCategory: (categorySlug: string, page?: number, search?: string | null) => {
       const params = new URLSearchParams({ slug: categorySlug });
       if (page) params.set('page', page.toString());
+      if (search) params.set('search', search);
       return fetchAPI<PaginatedResponse<Post>>(`/posts/by_category/?${params}`);
     },
   },
@@ -202,10 +203,11 @@ export const api = {
 
   // Documents
   documents: {
-    getAll: (params?: { page?: number; doc_type?: string; search?: string }) => {
+    getAll: (params?: { page?: number; doc_type?: string; doc_source?: string; search?: string }) => {
       const searchParams = new URLSearchParams();
       if (params?.page) searchParams.set('page', params.page.toString());
       if (params?.doc_type) searchParams.set('doc_type', params.doc_type);
+      if (params?.doc_source) searchParams.set('doc_source', params.doc_source);
       if (params?.search) searchParams.set('search', params.search);
       const query = searchParams.toString();
       return fetchAPI<PaginatedResponse<Document>>(`/documents/${query ? `?${query}` : ''}`);

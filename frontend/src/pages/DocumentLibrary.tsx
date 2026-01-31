@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -21,12 +21,19 @@ const DocumentLibrary = () => {
   const [activeTab, setActiveTab] = useState<"all" | "CONG_VAN" | "QUYET_DINH">("all");
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
 
-  const { type } = useParams<{ type?: string }>();
+  const { type: pathType } = useParams<{ type?: string }>();
+  const [searchParams] = useSearchParams();
+  const queryType = searchParams.get('type');
+  const querySource = searchParams.get('source');
+  
+  // Use query param if available, otherwise use path param
+  const type = queryType || pathType;
+  const source = querySource;
 
   // Đồng bộ tab với URL (chỉ khi load / đổi route)
   useEffect(() => {
-    if (type === "cong-van") setActiveTab("CONG_VAN");
-    else if (type === "quyet-dinh") setActiveTab("QUYET_DINH");
+    if (type === "cong-van" || type === "CONG_VAN") setActiveTab("CONG_VAN");
+    else if (type === "quyet-dinh" || type === "QUYET_DINH") setActiveTab("QUYET_DINH");
     else setActiveTab("all");
   }, [type]);
 
@@ -35,6 +42,7 @@ const DocumentLibrary = () => {
 
   const { data, isLoading } = useDocuments({
     doc_type: docType,
+    doc_source: source,
     search: searchTerm,
   });
 

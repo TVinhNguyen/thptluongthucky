@@ -88,8 +88,8 @@ class PageAdmin(ModelAdmin):
 class DocumentAdmin(ModelAdmin):
     """Admin interface - Document CRUD"""
     
-    list_display = ['title', 'code', 'doc_type', 'published_date', 'signer', 'download_count', 'file_size']
-    list_filter = ['doc_type', 'published_date', 'created_at']
+    list_display = ['title', 'code', 'doc_type', 'doc_source', 'published_date', 'signer', 'download_count']
+    list_filter = ['doc_type', 'doc_source', 'published_date', 'created_at']
     search_fields = ['title', 'code', 'signer', 'description']
     date_hierarchy = 'published_date'
     ordering = ['-published_date', '-created_at']
@@ -97,7 +97,7 @@ class DocumentAdmin(ModelAdmin):
     
     fieldsets = (
         ('Thông tin', {
-            'fields': ('code', 'title', 'doc_type')
+            'fields': ('code', 'title', 'doc_type', 'doc_source')
         }),
         ('File', {
             'fields': ('file', 'file_size', 'file_url_display'),

@@ -22,13 +22,22 @@ class DocumentFileValidator:
         self.max_size = max_size or self.MAX_FILE_SIZE
     
     def __call__(self, file):
-        if file.size > self.max_size:
+        # Skip validation for CloudinaryResource objects (already uploaded)
+        if hasattr(file, 'public_id'):
+            return
+        
+        # Validate size only if attribute exists
+        if hasattr(file, 'size') and file.size and file.size > self.max_size:
             raise ValidationError(
                 _('File exceeds %(max)s MB'),
                 params={'max': self.max_size / (1024 * 1024)}
             )
         
-        if not self._is_allowed(file.content_type, file.name):
+        # Validate file type
+        content_type = getattr(file, 'content_type', '')
+        filename = getattr(file, 'name', '')
+        
+        if content_type and filename and not self._is_allowed(content_type, filename):
             exts = ', '.join(self._get_all_extensions())
             raise ValidationError(
                 _('File type not allowed. Allowed: %(types)s'),

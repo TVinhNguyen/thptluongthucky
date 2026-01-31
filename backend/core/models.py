@@ -99,10 +99,18 @@ class Document(models.Model):
         ('BIEU_MAU', 'Biểu mẫu'),
         ('OTHER', 'Khác'),
     ]
+
+    DOC_SOURCE_CHOICES = [
+        ('SO_GDDT', 'Sở GD&ĐT'),
+        ('TRUONG', 'Trường'),
+        ('HDND_UBND', 'HĐND-UBND xã'),
+        ('THONG_BAO', 'Thông báo'),
+    ]
     
     code = models.CharField(max_length=50, blank=True, verbose_name="Số hiệu văn bản")
     title = models.CharField(max_length=500, verbose_name="Tiêu đề")
     doc_type = models.CharField(max_length=50, choices=DOC_TYPE_CHOICES, default='OTHER', verbose_name="Loại văn bản")
+    doc_source = models.CharField(max_length=50, choices=DOC_SOURCE_CHOICES, null=True, blank=True, verbose_name="Phát hành")
     file = CloudinaryField("File đính kèm", resource_type="raw", validators=[document_file_validator])
     file_size = models.IntegerField(default=0, editable=False, verbose_name="Kích thước (KB)")
     description = models.TextField(blank=True, verbose_name="Mô tả")
