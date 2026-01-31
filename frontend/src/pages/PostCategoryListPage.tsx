@@ -14,8 +14,9 @@ const CategoryList = () => {
   const { category } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentPage = parseInt(searchParams.get('page') || '1');
+  const searchKeywords = searchParams.get('search');
   
-  const { data, isLoading, error } = usePostsByCategory(category || '', currentPage);
+  const { data, isLoading, error } = usePostsByCategory(category || '', currentPage, searchKeywords);
   const { data: categoriesData } = useCategories();
   
   // Build categoryNames mapping from database (including children)

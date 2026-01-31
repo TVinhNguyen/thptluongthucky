@@ -87,9 +87,12 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
     def by_category(self, request):
         """
         Lấy bài viết theo slug danh mục (hỗ trợ cả category cha và con).
+        Support search query param để filter theo keyword.
         Nếu slug = 'tin-moi-nhat' thì trả về tin mới nhất (không theo danh mục).
         """
         category_slug = request.query_params.get('slug')
+        search_query = request.query_params.get('search')
+        
         if not category_slug:
             return Response(
                 {'error': 'Vui lòng cung cấp slug danh mục'},
@@ -103,20 +106,33 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
                 .filter(published_at__isnull=False)
                 .order_by('-published_at')
             )
-            page = self.paginate_queryset(queryset)
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        # Các danh mục bình thường (hỗ trợ cả parent và children)
-        try:
-            category = Category.objects.get(slug=category_slug)
-        except Category.DoesNotExist:
-            return Response(
-                {'error': 'Không tìm thấy danh mục'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        posts = self.get_queryset().filter(category=category)
-        page = self.paginate_queryset(posts)
+        else:
+            # Các danh mục bình thường (hỗ trợ cả parent và children)
+            try:
+                category = Category.objects.get(slug=category_slug)
+            except Category.DoesNotExist:
+                return Response(
+                    {'error': 'Không tìm thấy danh mục'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            queryset = self.get_queryset().filter(category=category)
+        
+        # Apply search filter if provided
+        if search_query:
+            from django.db.models import Q
+            keywords = search_query.split('|')
+            q_objects = Q()
+            for keyword in keywords:
+                keyword = keyword.strip()
+                if keyword:
+                    q_objects |= (
+                        Q(title__icontains=keyword) |
+                        Q(summary__icontains=keyword) |
+                        Q(content__icontains=keyword)
+                    )
+            queryset = queryset.filter(q_objects)
+        
+        page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
@@ -138,7 +154,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all().order_by('-published_date', '-created_at')
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['doc_type']
+    filterset_fields = ['doc_type', 'doc_source']
     search_fields = ['title', 'code', 'signer', 'description']
     ordering_fields = ['published_date', 'created_at', 'download_count']
     

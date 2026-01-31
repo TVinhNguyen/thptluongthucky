@@ -19,16 +19,16 @@ const LeftSidebar = () => {
       title: "Tin tức sự kiện",
       items: [
         { label: "Thời khóa biểu", href: "/chuyen-muc/thoi-khoa-bieu" },
-        { label: "Thi - Kiểm tra", href: "/chuyen-muc/thi-kiem-tra" },
+        { label: "Thi - Kiểm tra", href: "/chuyen-muc/thi-tuyen-sinh?search=thi|kiểm tra" },
       ],
     },
     {
       title: "Văn Bản Điều Hành",
       items: [
-        { label: "Văn bản Sở GD&ĐT", href: "/thu-vien-van-ban?type=so-gddt" },
-        { label: "Văn bản Trường", href: "/thu-vien-van-ban?type=truong" },
-        { label: "Văn bản HĐND-UBND xã", href: "/thu-vien-van-ban?type=hdnd-ubnd" },
-        { label: "Thông báo, phổ biến", href: "/thu-vien-van-ban?type=thong-bao" },
+        { label: "Văn bản Sở GD&ĐT", href: "/thu-vien-van-ban?source=SO_GDDT" },
+        { label: "Văn bản Trường", href: "/thu-vien-van-ban?source=TRUONG" },
+        { label: "Văn bản HĐND-UBND xã", href: "/thu-vien-van-ban?source=HDND_UBND" },
+        { label: "Thông báo, phổ biến", href: "/thu-vien-van-ban?source=THONG_BAO" },
       ],
     },
     {
