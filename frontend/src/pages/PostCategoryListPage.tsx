@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { usePostsByCategory, useCategories } from "@/hooks/useApi";
 import { formatDate, type Category } from "@/lib/api";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { POST_CATEGORY_TEXT } from "@/constants/appText";
 
 const CategoryList = () => {
   const { category } = useParams();
@@ -36,7 +37,6 @@ const CategoryList = () => {
 
   const categoryTitle = categoryNames[category || ""] || category?.replace(/-/g, " ") || "Danh sách";
 
-  console.log(data);
   const handlePageChange = (page: number) => {
     setSearchParams({ page: page.toString() });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -53,7 +53,7 @@ const CategoryList = () => {
         <div className="container mx-auto px-4 py-8">
           <Breadcrumb
             items={[
-              { label: "Chuyên mục", href: "/" },
+              { label: POST_CATEGORY_TEXT.breadcrumbRoot, href: "/" },
               { label: categoryTitle },
             ]}
           />
@@ -75,7 +75,7 @@ const CategoryList = () => {
             </div>
           ) : error ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Không thể tải danh sách bài viết</p>
+              <p className="text-muted-foreground">{POST_CATEGORY_TEXT.loadError}</p>
             </div>
           ) : data?.results && data.results.length > 0 ? (
             <>
@@ -102,11 +102,11 @@ const CategoryList = () => {
                     disabled={currentPage <= 1}
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    Trước
+                    {POST_CATEGORY_TEXT.prevPage}
                   </Button>
                   
                   <span className="px-4 text-sm text-muted-foreground">
-                    Trang {currentPage} / {totalPages}
+                    {POST_CATEGORY_TEXT.pageLabel} {currentPage} / {totalPages}
                   </span>
                   
                   <Button
@@ -115,7 +115,7 @@ const CategoryList = () => {
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={!data.next}
                   >
-                    Sau
+                    {POST_CATEGORY_TEXT.nextPage}
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
@@ -123,7 +123,7 @@ const CategoryList = () => {
             </>
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Chưa có bài viết nào trong chuyên mục này</p>
+              <p className="text-muted-foreground">{POST_CATEGORY_TEXT.empty}</p>
             </div>
           )}
         </div>

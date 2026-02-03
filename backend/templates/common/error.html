@@ -1,0 +1,171 @@
+{# templates/admin/404.html (hoặc templates/404.html tùy cấu hình) #}
+{% extends "admin/base_site.html" %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* Scope toàn bộ style vào .err-standalone để tránh override Unfold */
+    .err-standalone{
+      --err-gb: #F2EEE8;
+      --err-wh: #FFFFFF;
+      --err-dark: #383A41;
+      --err-red: #EB6D6D;
+      --err-blue:#5E7FDC;
+
+      min-height: calc(100vh - 120px); /* tránh dính header admin */
+      display: grid;
+      place-items: center;
+      padding: 32px 16px;
+      font-family: "Open Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .err-standalone, .err-standalone *{ box-sizing: border-box; }
+
+    .err-card{
+      width: min(760px, 100%);
+      display: grid;
+      justify-items: center;
+      gap: 18px;
+    }
+
+    .err-face {
+      width: 300px;
+      height: 300px;
+      border: 4px solid var(--err-dark);
+      border-radius: 10px;
+      background-color: var(--err-wh);
+      position: relative;
+      overflow: hidden;
+    }
+    @media (max-width: 400px) { .err-face { transform: scale(.85); } }
+
+    .err-band {
+      width: 350px;
+      height: 27px;
+      border: 4px solid var(--err-dark);
+      border-radius: 5px;
+      position: absolute;
+      left: 50%;
+      top: 50px;
+      transform: translateX(-50%);
+    }
+    .err-band .err-red   { height: calc(100%/3); width: 100%; background: var(--err-red); }
+    .err-band .err-white { height: calc(100%/3); width: 100%; background: var(--err-wh); }
+    .err-band .err-blue  { height: calc(100%/3); width: 100%; background: var(--err-blue); }
+
+    .err-band::before{
+      content:""; height:27px; width:30px;
+      background: rgba(255,255,255,.3);
+      position:absolute; left:0; top:0; z-index:2;
+    }
+    .err-band::after{
+      content:""; height:27px; width:30px;
+      background: rgba(56,58,65,.3);
+      position:absolute; right:0; top:0; z-index:2;
+    }
+
+    .err-eyes{
+      width: 128px;
+      position: absolute;
+      left: 50%;
+      top: 120px;
+      transform: translateX(-50%);
+    }
+    .err-eyes::before, .err-eyes::after{
+      content:"";
+      display:inline-block;
+      width:30px; height:15px;
+      border:7px solid var(--err-dark);
+      border-top-left-radius:22px;
+      border-top-right-radius:22px;
+      border-bottom:0;
+      vertical-align: top;
+    }
+    .err-eyes::before{ margin-right:20px; }
+    .err-eyes::after{ margin-left:20px; }
+
+    .err-dimples{
+      width: 180px;
+      position: absolute;
+      left: 50%;
+      top: 170px;
+      transform: translateX(-50%);
+    }
+    .err-dimples::before, .err-dimples::after{
+      content:"";
+      display:inline-block;
+      width:10px; height:10px;
+      border-radius:50%;
+      background: rgba(235,109,109,.4);
+    }
+    .err-dimples::before{ margin-right:80px; }
+    .err-dimples::after{ margin-left:80px; }
+
+    .err-mouth{
+      width:40px; height:5px;
+      border-radius:5px;
+      background: var(--err-dark);
+      position:absolute;
+      left:50%; top:210px;
+      transform: translateX(-50%);
+    }
+
+    .err-title{
+      margin: 0;
+      font-weight: 800;
+      color: var(--err-dark);
+      text-align: center;
+      font-size: clamp(1.6rem, 3vw, 2.5rem);
+      line-height: 1.15;
+    }
+
+    .err-btn{
+      appearance:none;
+      border:none;
+      font-family: inherit;
+      font-weight: 600;
+      padding: 12px 18px;
+      background: rgba(94,127,220,1);
+      color:#fff;
+      width: min(320px, 100%);
+      text-align:center;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor:pointer;
+      transition: transform .12s ease, background-color .2s linear;
+      user-select:none;
+    }
+    .err-btn:hover{ background: rgba(94,127,220,.85); transform: translateY(-1px); }
+    .err-btn:active{ transform: translateY(0); }
+    .err-btn:focus-visible{
+      outline: 3px solid rgba(94,127,220,.35);
+      outline-offset: 3px;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="err-standalone">
+    <div class="err-card">
+      <div class="err-face" aria-hidden="true">
+        <div class="err-band">
+          <div class="err-red"></div>
+          <div class="err-white"></div>
+          <div class="err-blue"></div>
+        </div>
+        <div class="err-eyes"></div>
+        <div class="err-dimples"></div>
+        <div class="err-mouth"></div>
+      </div>
+
+      <h1 class="err-title">Oops! Something went wrong!</h1>
+
+      <button class="err-btn" type="button" onclick="window.location.href='/'">
+        Return to Home
+      </button>
+    </div>
+  </div>
+{% endblock %}

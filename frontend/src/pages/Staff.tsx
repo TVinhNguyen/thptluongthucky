@@ -52,7 +52,7 @@ const Staff = () => {
 
     if (matched) {
       setSelectedDepartment(matched.id.toString());
-      console.log(setSelectedDepartment(matched.id.toString()));
+      // console.log(setSelectedDepartment(matched.id.toString()));
     } else {
       // fallback: apply search term to narrow list if no department matched
       setSearchTerm(filterParam.replace(/-/g, " "));
