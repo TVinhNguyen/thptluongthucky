@@ -1,10 +1,15 @@
 from django.contrib import admin
 from django import forms
+from django.shortcuts import render, redirect
+from django.urls import path
+from django.contrib import messages
 from unfold.admin import ModelAdmin
 from .models import (
     Category, Post, Page, Document, Department, Staff,
-    PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage
+    PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage,
+    SchoolYear, SchoolClass, TimetableEntry
 )
+from .utils import import_timetable_from_excel
 
 # Register your models here.
 # CKEditor 5 works automatically with CKEditor5Field in models
@@ -230,3 +235,129 @@ class ContactMessageAdmin(ModelAdmin):
     def mark_as_replied(self, request, queryset):
         updated = queryset.update(status='REPLIED')
         self.message_user(request, f'{updated} tin nhắn đã được đánh dấu đã trả lời.')
+
+
+# ============= TIMETABLE ADMIN =============
+
+@admin.register(SchoolYear)
+class SchoolYearAdmin(ModelAdmin):
+    """Admin interface cho năm học"""
+    list_display = ['name', 'start_date', 'end_date', 'is_active', 'created_at']
+    list_filter = ['is_active', 'start_date']
+    search_fields = ['name']
+    ordering = ['-start_date']
+    list_editable = ['is_active']
+    readonly_fields = ['created_at', 'updated_at']
+    change_form_template = 'admin/schoolyear_change_form.html'
+    
+    fieldsets = (
+        ('Thông tin năm học', {
+            'fields': ('name', 'start_date', 'end_date', 'is_active')
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    actions = ['activate_year', 'deactivate_year']
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('<int:object_id>/import-timetable/', 
+                 self.admin_site.admin_view(self.import_timetable_view), 
+                 name='core_schoolyear_import'),
+        ]
+        return custom_urls + urls
+    
+    def import_timetable_view(self, request, object_id):
+        """View xử lý import TKB cho năm học cụ thể"""
+        school_year = self.get_object(request, object_id)
+        
+        if request.method == 'POST':
+            excel_file = request.FILES.get('excel_file')
+            
+            if not excel_file:
+                messages.error(request, 'Vui lòng chọn file Excel!')
+            else:
+                success, message = import_timetable_from_excel(
+                    file=excel_file,
+                    school_year_id=object_id,
+                    import_both_sessions=True  # Mặc định luôn import cả 2 buổi
+                )
+                
+                if success:
+                    messages.success(request, message)
+                else:
+                    messages.error(request, message)
+        
+        return redirect('admin:core_schoolyear_change', object_id)
+    
+    @admin.action(description='Kích hoạt năm học')
+    def activate_year(self, request, queryset):
+        # Chỉ cho phép 1 năm active
+        if queryset.count() > 1:
+            self.message_user(request, 'Chỉ có thể kích hoạt 1 năm học tại 1 thời điểm!', level='error')
+            return
+        SchoolYear.objects.all().update(is_active=False)
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f'{updated} năm học đã được kích hoạt.')
+    
+    @admin.action(description='Vô hiệu hóa năm học')
+    def deactivate_year(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'{updated} năm học đã được vô hiệu hóa.')
+
+
+@admin.register(SchoolClass)
+class SchoolClassAdmin(ModelAdmin):
+    """Admin interface cho lớp học"""
+    list_display = ['name', 'grade', 'created_at']
+    list_filter = ['grade']
+    search_fields = ['name']
+    ordering = ['grade', 'name']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Thông tin lớp', {
+            'fields': ('name', 'grade')
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(TimetableEntry)
+class TimetableEntryAdmin(ModelAdmin):
+    """Admin interface cho thời khóa biểu"""
+    list_display = ['school_class', 'school_year', 'day_of_week', 'period', 
+                   'subject_name', 'teacher_name', 'room']
+    list_filter = ['school_year', 'school_class', 'day_of_week', 'period']
+    search_fields = ['subject_name', 'teacher_name', 'room']
+    ordering = ['school_year', 'school_class', 'day_of_week', 'period']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Thông tin cơ bản', {
+            'fields': ('school_year', 'school_class', 'day_of_week', 'period')
+        }),
+        ('Nội dung tiết học', {
+            'fields': ('subject_name', 'teacher_name', 'room')
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    actions = ['delete_entries']
+    
+    @admin.action(description='Xóa các tiết học đã chọn')
+    def delete_entries(self, request, queryset):
+        count = queryset.count()
+        queryset.delete()
+        self.message_user(request, f'Đã xóa {count} tiết học.')
+

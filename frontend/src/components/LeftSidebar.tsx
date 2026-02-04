@@ -18,7 +18,7 @@ const LeftSidebar = () => {
     {
       title: "Tin tức sự kiện",
       items: [
-        { label: "Thời khóa biểu", href: "/chuyen-muc/thoi-khoa-bieu" },
+        { label: "Thời khóa biểu", href: "/thoi-khoa-bieu" },
         { label: "Thi - Kiểm tra", href: "/chuyen-muc/thi-tuyen-sinh?search=thi|kiểm tra" },
       ],
     },

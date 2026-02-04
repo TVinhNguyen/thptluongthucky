@@ -8,8 +8,9 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 214 47% 97%;
-    --bg: 214 47% 97%; /* Alias for background */
+    /* Main page background - rgb(237, 245, 255) converted to HSL */
+    --background: 210 100% 97%;
+    --bg: 210 100% 97%; /* Alias for background */
     --foreground: 220 15% 15%;
 
     --card: 0 0% 100%;

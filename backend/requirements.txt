@@ -23,3 +23,7 @@ django-ckeditor-5
 # --- Media storage (Cloudinary) ---
 cloudinary
 django-cloudinary-storage
+
+# --- Excel Import/Export ---
+pandas
+openpyxl

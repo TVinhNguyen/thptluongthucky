@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import (
     Category, Post, Page, Document, Department, Staff,
-    PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage
+    PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage,
+    SchoolYear, SchoolClass, TimetableEntry
 )
 from .validators import document_file_validator
 from cloudinary.utils import cloudinary_url
@@ -227,3 +228,87 @@ class ContactMessageSerializer(serializers.ModelSerializer):
         fields = ['id', 'full_name', 'email', 'phone', 'subject', 
                   'message', 'status', 'created_at']
         read_only_fields = ['status', 'created_at']
+
+
+# ============= TIMETABLE SERIALIZERS =============
+
+class SchoolYearSerializer(serializers.ModelSerializer):
+    """Serializer cho năm học"""
+    entry_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = SchoolYear
+        fields = ['id', 'name', 'start_date', 'end_date', 'is_active', 
+                  'created_at', 'updated_at', 'entry_count']
+        read_only_fields = ['created_at', 'updated_at']
+    
+    def get_entry_count(self, obj):
+        """Đếm số tiết học trong năm học này"""
+        return obj.timetable_entries.count()
+
+
+class SchoolClassSerializer(serializers.ModelSerializer):
+    """Serializer cho lớp học"""
+    grade_display = serializers.CharField(source='get_grade_display', read_only=True)
+    
+    class Meta:
+        model = SchoolClass
+        fields = ['id', 'name', 'grade', 'grade_display', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class TimetableEntrySerializer(serializers.ModelSerializer):
+    """Serializer cho chi tiết thời khóa biểu"""
+    school_year_name = serializers.CharField(source='school_year.name', read_only=True)
+    school_class_name = serializers.CharField(source='school_class.name', read_only=True)
+    day_of_week_display = serializers.CharField(source='get_day_of_week_display', read_only=True)
+    
+    class Meta:
+        model = TimetableEntry
+        fields = [
+            'id', 'school_year', 'school_year_name', 'school_class', 'school_class_name',
+            'day_of_week', 'day_of_week_display', 'period', 'subject_name', 
+            'teacher_name', 'room', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class TimetableEntryListSerializer(serializers.ModelSerializer):
+    """Serializer tóm tắt cho danh sách TKB"""
+    school_class_name = serializers.CharField(source='school_class.name', read_only=True)
+    day_of_week_display = serializers.CharField(source='get_day_of_week_display', read_only=True)
+    
+    class Meta:
+        model = TimetableEntry
+        fields = [
+            'id', 'school_class_name', 'day_of_week', 'day_of_week_display',
+            'period', 'subject_name', 'teacher_name', 'room'
+        ]
+
+
+class TimetableImportSerializer(serializers.Serializer):
+    """Serializer cho upload file Excel TKB"""
+    file = serializers.FileField(required=True)
+    school_year = serializers.PrimaryKeyRelatedField(
+        queryset=SchoolYear.objects.all(),
+        required=True
+    )
+    import_both_sessions = serializers.BooleanField(
+        default=True,
+        required=False,
+        help_text="True = import cả sáng và chiều, False = chỉ import sheet được chỉ định"
+    )
+    sheet_name = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="Tên sheet cụ thể cần import (nếu import_both_sessions=False)"
+    )
+    
+    def validate_file(self, value):
+        """Validate file extension"""
+        if not value.name.lower().endswith(('.xlsx', '.xls')):
+            raise serializers.ValidationError(
+                "File không đúng định dạng. Chỉ chấp nhận file Excel (.xlsx, .xls)"
+            )
+        return value
+
