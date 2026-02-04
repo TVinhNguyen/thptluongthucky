@@ -16,8 +16,15 @@ router.register(r'banners', views.BannerViewSet, basename='banner')
 router.register(r'external-links', views.ExternalLinkViewSet, basename='externallink')
 router.register(r'contact', views.ContactMessageViewSet, basename='contact')
 
+# Timetable routes
+router.register(r'school-years', views.SchoolYearViewSet, basename='schoolyear')
+router.register(r'school-classes', views.SchoolClassViewSet, basename='schoolclass')
+router.register(r'timetable', views.TimetableEntryViewSet, basename='timetable')
+
 app_name = 'core'
 
 urlpatterns = [
     path('', include(router.urls)),
+    # Custom endpoint cho import TKB
+    path('timetable/import/', views.TimetableImportView.as_view(), name='timetable-import'),
 ]

@@ -375,3 +375,90 @@ class ContactMessage(models.Model):
     
     def __str__(self):
         return f"{self.full_name} - {self.subject or 'Liên hệ'}"
+
+
+# ============= TIMETABLE MODELS =============
+
+class SchoolYear(models.Model):
+    """Năm học & Học kỳ"""
+    name = models.CharField(max_length=100, unique=True, verbose_name="Tên (VD: HK1 2025-2026)")
+    start_date = models.DateField(verbose_name="Ngày bắt đầu")
+    end_date = models.DateField(null=True, blank=True, verbose_name="Ngày kết thúc")
+    is_active = models.BooleanField(default=True, verbose_name="Đang áp dụng")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Năm học"
+        verbose_name_plural = "Năm học"
+        ordering = ['-start_date']
+    
+    def save(self, *args, **kwargs):
+        # Nếu is_active=True, set các năm khác thành False
+        if self.is_active:
+            SchoolYear.objects.exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return self.name
+
+
+class SchoolClass(models.Model):
+    """Lớp học (12A1, 10A2...)"""
+    name = models.CharField(max_length=50, unique=True, verbose_name="Tên lớp")
+    grade = models.IntegerField(
+        choices=[(10, 'Khối 10'), (11, 'Khối 11'), (12, 'Khối 12')],
+        verbose_name="Khối"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Lớp học"
+        verbose_name_plural = "Lớp học"
+        ordering = ['grade', 'name']
+    
+    def __str__(self):
+        return self.name
+
+
+class TimetableEntry(models.Model):
+    """Chi tiết thời khóa biểu từng tiết"""
+    DAY_CHOICES = [
+        (2, 'Thứ 2'),
+        (3, 'Thứ 3'),
+        (4, 'Thứ 4'),
+        (5, 'Thứ 5'),
+        (6, 'Thứ 6'),
+        (7, 'Thứ 7'),
+        (8, 'Chủ nhật'),
+    ]
+    
+    school_year = models.ForeignKey(
+        SchoolYear,
+        on_delete=models.CASCADE,
+        related_name='timetable_entries',
+        verbose_name="Học kỳ/Năm học"
+    )
+    school_class = models.ForeignKey(
+        SchoolClass,
+        on_delete=models.CASCADE,
+        related_name='timetable_entries',
+        verbose_name="Lớp"
+    )
+    day_of_week = models.IntegerField(choices=DAY_CHOICES, verbose_name="Thứ")
+    period = models.IntegerField(verbose_name="Tiết (1-10)")
+    subject_name = models.CharField(max_length=100, verbose_name="Môn học")
+    teacher_name = models.CharField(max_length=100, blank=True, verbose_name="Giáo viên")
+    room = models.CharField(max_length=50, blank=True, verbose_name="Phòng học")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Chi tiết TKB"
+        verbose_name_plural = "Chi tiết TKB"
+        ordering = ['school_year', 'school_class', 'day_of_week', 'period']
+        unique_together = [('school_year', 'school_class', 'day_of_week', 'period')]
+    
+    def __str__(self):
+        return f"{self.school_class} - T{self.day_of_week} - Tiết {self.period}"
