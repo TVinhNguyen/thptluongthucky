@@ -2,6 +2,7 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
+from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import F
@@ -10,15 +11,19 @@ import logging
 
 from .models import (
     Category, Post, Page, Document, Department, Staff,
-    PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage
+    PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage,
+    SchoolYear, SchoolClass, TimetableEntry
 )
 from .serializers import (
     CategorySerializer, PostListSerializer, PostDetailSerializer,
     PageSerializer, DocumentSerializer, DocumentCreateUpdateSerializer,
     DepartmentSerializer, StaffSerializer,
     PhotoAlbumListSerializer, PhotoAlbumDetailSerializer, PhotoSerializer,
-    VideoSerializer, BannerSerializer, ExternalLinkSerializer, ContactMessageSerializer
+    VideoSerializer, BannerSerializer, ExternalLinkSerializer, ContactMessageSerializer,
+    SchoolYearSerializer, SchoolClassSerializer, TimetableEntrySerializer,
+    TimetableEntryListSerializer, TimetableImportSerializer
 )
+from .utils import import_timetable_from_excel
 
 logger = logging.getLogger(__name__)
 
@@ -322,3 +327,152 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
              'data': serializer.data},
             status=status.HTTP_201_CREATED
         )
+
+
+# ============= TIMETABLE VIEWS =============
+
+class SchoolYearViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint cho năm học
+    - list: Danh sách năm học
+    - retrieve: Chi tiết năm học
+    - create/update/delete: Quản lý năm học (cần quyền admin)
+    """
+    queryset = SchoolYear.objects.all()
+    serializer_class = SchoolYearSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """Lấy năm học đang active"""
+        try:
+            active_year = SchoolYear.objects.get(is_active=True)
+            serializer = self.get_serializer(active_year)
+            return Response(serializer.data)
+        except SchoolYear.DoesNotExist:
+            return Response(
+                {'error': 'Không có năm học nào đang active'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class SchoolClassViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint cho lớp học
+    - list: Danh sách lớp học
+    - retrieve: Chi tiết lớp học
+    - filter by grade: ?grade=10
+    """
+    queryset = SchoolClass.objects.all()
+    serializer_class = SchoolClassSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['grade']
+    ordering_fields = ['grade', 'name']
+    ordering = ['grade', 'name']
+
+
+class TimetableEntryViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint cho thời khóa biểu
+    - list: Danh sách tiết học
+    - retrieve: Chi tiết tiết học
+    - filter: ?school_year=1&school_class=2&day_of_week=2
+    """
+    queryset = TimetableEntry.objects.select_related(
+        'school_year', 'school_class'
+    ).all()
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['school_year', 'school_class', 'day_of_week', 'period']
+    ordering_fields = ['day_of_week', 'period']
+    ordering = ['day_of_week', 'period']
+    
+    def get_serializer_class(self):
+        """Dùng serializer khác cho list và detail"""
+        if self.action == 'list':
+            return TimetableEntryListSerializer
+        return TimetableEntrySerializer
+    
+    @action(detail=False, methods=['get'])
+    def by_class(self, request):
+        """
+        Lấy TKB theo lớp
+        Query params: ?class_id=1&school_year_id=1
+        """
+        class_id = request.query_params.get('class_id')
+        school_year_id = request.query_params.get('school_year_id')
+        
+        if not class_id:
+            return Response(
+                {'error': 'Thiếu tham số class_id'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        queryset = self.get_queryset().filter(school_class_id=class_id)
+        
+        if school_year_id:
+            queryset = queryset.filter(school_year_id=school_year_id)
+        else:
+            # Lấy năm học active
+            try:
+                active_year = SchoolYear.objects.get(is_active=True)
+                queryset = queryset.filter(school_year=active_year)
+            except SchoolYear.DoesNotExist:
+                pass
+        
+        serializer = TimetableEntryListSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class TimetableImportView(APIView):
+    """
+    API endpoint để import TKB từ file Excel
+    POST: Upload file Excel + school_year_id
+    Hỗ trợ:
+    - import_both_sessions=true: Import cả sáng và chiều (mặc định)
+    - import_both_sessions=false + sheet_name: Import 1 sheet cụ thể
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        """Import TKB từ file Excel"""
+        serializer = TimetableImportSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response(
+                {'error': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        file = serializer.validated_data['file']
+        school_year = serializer.validated_data['school_year']
+        import_both_sessions = serializer.validated_data.get('import_both_sessions', True)
+        sheet_name = serializer.validated_data.get('sheet_name', None)
+        
+        # Gọi hàm import
+        success, message = import_timetable_from_excel(
+            file=file,
+            school_year_id=school_year.id,
+            sheet_name=sheet_name,
+            import_both_sessions=import_both_sessions
+        )
+        
+        if success:
+            return Response(
+                {
+                    'success': True,
+                    'message': message,
+                    'school_year': SchoolYearSerializer(school_year).data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(
+                {
+                    'success': False,
+                    'error': message
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
