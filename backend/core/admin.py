@@ -262,6 +262,34 @@ class SchoolYearAdmin(ModelAdmin):
     
     actions = ['activate_year', 'deactivate_year']
     
+    def response_change(self, request, obj):
+        """Override để xử lý import TKB từ form change"""
+        # Kiểm tra xem có file Excel được upload không
+        excel_file = request.FILES.get('excel_file')
+        
+        if excel_file:
+            logger.info(f"Excel file detected: {excel_file.name}")
+            # Xử lý import TKB
+            success, message = import_timetable_from_excel(
+                file=excel_file,
+                school_year_id=obj.id,
+                import_both_sessions=True
+            )
+            
+            if success:
+                messages.success(request, message)
+            else:
+                messages.error(request, message)
+            
+            # Redirect về trang change để hiển thị kết quả
+            from django.http import HttpResponseRedirect
+            return HttpResponseRedirect(request.path)
+        else:
+            logger.warning("No excel_file in request.FILES")
+        
+        # Nếu không có file Excel, xử lý bình thường
+        return super().response_change(request, obj)
+    
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
