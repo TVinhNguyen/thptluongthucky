@@ -1,8 +1,9 @@
 from django.contrib import admin
 from django import forms
+from django.contrib import messages
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import path
-from django.contrib import messages
 from unfold.admin import ModelAdmin
 from .models import (
     Category, Post, Page, Document, Department, Staff,
@@ -11,8 +12,6 @@ from .models import (
 )
 from .utils import import_timetable_from_excel
 
-# Register your models here.
-# CKEditor 5 works automatically with CKEditor5Field in models
 
 @admin.register(Category)
 class CategoryAdmin(ModelAdmin):
@@ -264,12 +263,9 @@ class SchoolYearAdmin(ModelAdmin):
     
     def response_change(self, request, obj):
         """Override để xử lý import TKB từ form change"""
-        # Kiểm tra xem có file Excel được upload không
         excel_file = request.FILES.get('excel_file')
         
         if excel_file:
-            logger.info(f"Excel file detected: {excel_file.name}")
-            # Xử lý import TKB
             success, message = import_timetable_from_excel(
                 file=excel_file,
                 school_year_id=obj.id,
@@ -281,13 +277,8 @@ class SchoolYearAdmin(ModelAdmin):
             else:
                 messages.error(request, message)
             
-            # Redirect về trang change để hiển thị kết quả
-            from django.http import HttpResponseRedirect
             return HttpResponseRedirect(request.path)
-        else:
-            logger.warning("No excel_file in request.FILES")
         
-        # Nếu không có file Excel, xử lý bình thường
         return super().response_change(request, obj)
     
     def get_urls(self):

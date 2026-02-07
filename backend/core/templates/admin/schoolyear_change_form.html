@@ -6,12 +6,9 @@
     <script>
         // Thêm enctype vào form để hỗ trợ file upload
         document.addEventListener('DOMContentLoaded', function() {
-            // Tìm form chính của Django admin
             var forms = document.querySelectorAll('form');
             forms.forEach(function(form) {
-                // Tìm form có method POST (là form chính)
                 if (form.method.toLowerCase() === 'post') {
-                    console.log('Found form, adding enctype');
                     form.setAttribute('enctype', 'multipart/form-data');
                 }
             });
