@@ -18,7 +18,7 @@ const RightSidebar = () => {
 
   return (
     <aside className="space-y-6">
-      <Card className="bg-card shadow-card hover:shadow-card-hover transition-all hover-scale overflow-hidden animate-fade-in">
+      <Card className="bg-card hover:shadow-card-hover transition-all hover-scale overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)] animate-fade-in">
         <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
           Chính phủ điện tử
         </div>
@@ -57,7 +57,7 @@ const RightSidebar = () => {
         </div>
       </Card>
 
-      <Card className="bg-gradient-to-br from-primary/5 to-accent/5 shadow-card hover:shadow-card-hover transition-all hover-scale overflow-hidden animate-fade-in">
+      <Card className="bg-gradient-to-br from-primary/5 to-accent/5 hover:shadow-card-hover transition-all hover-scale overflow-hidden animate-fade-in shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
         <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
           Lời Chủ tịch Hồ Chí Minh
         </div>

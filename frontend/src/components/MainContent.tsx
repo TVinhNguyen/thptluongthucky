@@ -28,7 +28,7 @@ const MainContent = () => {
     <main className="space-y-6">
       {/* Tin mới nhất */}
       <section>
-        <Card className="bg-card shadow-card overflow-hidden">
+        <Card className="bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
             Tin mới nhất
           </div>
@@ -59,7 +59,7 @@ const MainContent = () => {
 
       {/* Thi và Tuyển sinh */}
       <section>
-        <Card className="bg-card shadow-card overflow-hidden">
+        <Card className="bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
             Thi & Tuyển sinh
           </div>
@@ -89,7 +89,7 @@ const MainContent = () => {
 
       {/* Kế hoạch */}
       <section>
-        <Card className="bg-card shadow-card overflow-hidden">
+        <Card className="bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
             Kế hoạch giáo dục
           </div>
@@ -120,7 +120,7 @@ const MainContent = () => {
 
       {/* Hoạt động Đoàn thể */}
       <section>
-        <Card className="bg-card shadow-card overflow-hidden">
+        <Card className="bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
             Hoạt động Đoàn thể
           </div>

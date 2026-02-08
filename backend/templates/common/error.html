@@ -1,171 +1,171 @@
-{# templates/admin/404.html (hoặc templates/404.html tùy cấu hình) #}
-{% extends "admin/base_site.html" %}
-
-{% block extrastyle %}
-  {{ block.super }}
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;800&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    /* Scope toàn bộ style vào .err-standalone để tránh override Unfold */
-    .err-standalone{
-      --err-gb: #F2EEE8;
-      --err-wh: #FFFFFF;
-      --err-dark: #383A41;
-      --err-red: #EB6D6D;
-      --err-blue:#5E7FDC;
+    .err-standalone {
+      --err-primary: #2563eb;
+      --err-accent: #f59e0b;
+      --err-foreground: #0f172a;
+      --err-muted: #64748b;
+      --err-card: #ffffff;
+      --err-border: rgba(15, 23, 42, 0.08);
+      --err-shadow: 0 16px 40px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(15, 23, 42, 0.06);
 
-      min-height: calc(100vh - 120px); /* tránh dính header admin */
-      display: grid;
-      place-items: center;
-      padding: 32px 16px;
-      font-family: "Open Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px;
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(37, 99, 235, 0.12), transparent 60%),
+        radial-gradient(900px 500px at 110% 30%, rgba(245, 158, 11, 0.12), transparent 60%),
+        linear-gradient(135deg, rgba(37, 99, 235, 0.06), rgba(245, 158, 11, 0.06));
+      font-family: "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-    .err-standalone, .err-standalone *{ box-sizing: border-box; }
+    .err-standalone, .err-standalone * { box-sizing: border-box; }
 
-    .err-card{
-      width: min(760px, 100%);
-      display: grid;
-      justify-items: center;
-      gap: 18px;
-    }
-
-    .err-face {
-      width: 300px;
-      height: 300px;
-      border: 4px solid var(--err-dark);
-      border-radius: 10px;
-      background-color: var(--err-wh);
-      position: relative;
-      overflow: hidden;
-    }
-    @media (max-width: 400px) { .err-face { transform: scale(.85); } }
-
-    .err-band {
-      width: 350px;
-      height: 27px;
-      border: 4px solid var(--err-dark);
-      border-radius: 5px;
-      position: absolute;
-      left: 50%;
-      top: 50px;
-      transform: translateX(-50%);
-    }
-    .err-band .err-red   { height: calc(100%/3); width: 100%; background: var(--err-red); }
-    .err-band .err-white { height: calc(100%/3); width: 100%; background: var(--err-wh); }
-    .err-band .err-blue  { height: calc(100%/3); width: 100%; background: var(--err-blue); }
-
-    .err-band::before{
-      content:""; height:27px; width:30px;
-      background: rgba(255,255,255,.3);
-      position:absolute; left:0; top:0; z-index:2;
-    }
-    .err-band::after{
-      content:""; height:27px; width:30px;
-      background: rgba(56,58,65,.3);
-      position:absolute; right:0; top:0; z-index:2;
-    }
-
-    .err-eyes{
-      width: 128px;
-      position: absolute;
-      left: 50%;
-      top: 120px;
-      transform: translateX(-50%);
-    }
-    .err-eyes::before, .err-eyes::after{
-      content:"";
-      display:inline-block;
-      width:30px; height:15px;
-      border:7px solid var(--err-dark);
-      border-top-left-radius:22px;
-      border-top-right-radius:22px;
-      border-bottom:0;
-      vertical-align: top;
-    }
-    .err-eyes::before{ margin-right:20px; }
-    .err-eyes::after{ margin-left:20px; }
-
-    .err-dimples{
-      width: 180px;
-      position: absolute;
-      left: 50%;
-      top: 170px;
-      transform: translateX(-50%);
-    }
-    .err-dimples::before, .err-dimples::after{
-      content:"";
-      display:inline-block;
-      width:10px; height:10px;
-      border-radius:50%;
-      background: rgba(235,109,109,.4);
-    }
-    .err-dimples::before{ margin-right:80px; }
-    .err-dimples::after{ margin-left:80px; }
-
-    .err-mouth{
-      width:40px; height:5px;
-      border-radius:5px;
-      background: var(--err-dark);
-      position:absolute;
-      left:50%; top:210px;
-      transform: translateX(-50%);
-    }
-
-    .err-title{
-      margin: 0;
-      font-weight: 800;
-      color: var(--err-dark);
+    .err-container {
+      width: min(900px, 100%);
       text-align: center;
-      font-size: clamp(1.6rem, 3vw, 2.5rem);
-      line-height: 1.15;
     }
 
-    .err-btn{
-      appearance:none;
-      border:none;
-      font-family: inherit;
-      font-weight: 600;
-      padding: 12px 18px;
-      background: rgba(94,127,220,1);
-      color:#fff;
-      width: min(320px, 100%);
-      text-align:center;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor:pointer;
-      transition: transform .12s ease, background-color .2s linear;
-      user-select:none;
+    .err-code {
+      font-size: clamp(4.5rem, 14vw, 9rem);
+      font-weight: 800;
+      color: var(--err-primary);
+      margin: 0 0 12px;
+      letter-spacing: -0.04em;
     }
-    .err-btn:hover{ background: rgba(94,127,220,.85); transform: translateY(-1px); }
-    .err-btn:active{ transform: translateY(0); }
-    .err-btn:focus-visible{
-      outline: 3px solid rgba(94,127,220,.35);
-      outline-offset: 3px;
+
+    .err-divider {
+      width: 140px;
+      height: 6px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--err-primary), var(--err-accent));
+      margin: 0 auto 28px;
+    }
+
+    .err-title {
+      margin: 0 0 12px;
+      font-size: clamp(1.6rem, 3.6vw, 2.5rem);
+      font-weight: 700;
+      color: var(--err-foreground);
+    }
+
+    .err-message {
+      margin: 0 auto 28px;
+      max-width: 620px;
+      color: var(--err-muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    .err-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 36px;
+    }
+
+    .err-btn {
+      appearance: none;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    .err-btn-primary {
+      background: var(--err-primary);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+    }
+    .err-btn-primary:hover { transform: translateY(-1px); }
+
+    .err-btn-outline {
+      background: #fff;
+      color: var(--err-foreground);
+      border: 1px solid var(--err-border);
+      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+    }
+    .err-btn-outline:hover { transform: translateY(-1px); }
+
+    .err-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .err-card {
+      display: block;
+      text-decoration: none;
+      background: var(--err-card);
+      border: 1px solid var(--err-border);
+      border-radius: 16px;
+      padding: 18px 16px;
+      text-align: left;
+      box-shadow: var(--err-shadow);
+      transition: transform 0.12s ease, box-shadow 0.2s ease;
+    }
+    .err-card:hover { transform: translateY(-2px); }
+
+    .err-card-title {
+      margin: 0 0 6px;
+      font-weight: 600;
+      color: var(--err-foreground);
+    }
+
+    .err-card-desc {
+      margin: 0;
+      color: var(--err-muted);
+      font-size: 0.95rem;
     }
   </style>
-{% endblock %}
-
-{% block content %}
+</head>
+<body>
   <div class="err-standalone">
-    <div class="err-card">
-      <div class="err-face" aria-hidden="true">
-        <div class="err-band">
-          <div class="err-red"></div>
-          <div class="err-white"></div>
-          <div class="err-blue"></div>
-        </div>
-        <div class="err-eyes"></div>
-        <div class="err-dimples"></div>
-        <div class="err-mouth"></div>
+    <div class="err-container">
+      <h1 class="err-code">{{ status_code|default:"404" }}</h1>
+      <div class="err-divider"></div>
+
+      <h2 class="err-title">{{ title|default:"Không tìm thấy trang" }}</h2>
+      <p class="err-message">
+        {{ message|default:"Rất tiếc, trang bạn đang tìm kiếm không tồn tại hoặc đã được di chuyển." }}
+      </p>
+
+      <div class="err-actions">
+        <button class="err-btn err-btn-primary" type="button" onclick="window.location.href='/admin/'">
+          Về Trang Chủ
+        </button>
+        <button class="err-btn err-btn-outline" type="button" onclick="window.history.back()">
+          Quay Lại
+        </button>
       </div>
 
-      <h1 class="err-title">Oops! Something went wrong!</h1>
-
-      <button class="err-btn" type="button" onclick="window.location.href='/'">
-        Return to Home
-      </button>
+      <!-- <div class="err-links">
+        <a class="err-card" href="/">
+          <h3 class="err-card-title">Trang chủ</h3>
+          <p class="err-card-desc">Quay về trang chủ</p>
+        </a>
+        <a class="err-card" href="/thu-vien-van-ban">
+          <h3 class="err-card-title">Thư viện</h3>
+          <p class="err-card-desc">Văn bản & tài liệu</p>
+        </a>
+        <a class="err-card" href="/can-bo-giao-vien">
+          <h3 class="err-card-title">Cán bộ</h3>
+          <p class="err-card-desc">Giáo viên & nhân sự</p>
+        </a>
+      </div> -->
     </div>
   </div>
-{% endblock %}
+</body>
+</html>
