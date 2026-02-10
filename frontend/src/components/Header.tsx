@@ -34,7 +34,9 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <nav className="flex items-center justify-between py-3 border-b border-primary-foreground/20">
           <div className="flex items-center gap-6">
-            <span className="text-sm">{HEADER_TEXT.loginHint}</span>
+            <h1 className="text-xl md:text-2xl font-bold leading-none">
+              TRƯỜNG THPT LƯƠNG THÚC KỲ
+            </h1>
           </div>
 
           <div className="flex items-center gap-4 flex-1 justify-end">
@@ -77,6 +79,3 @@ const Header = () => {
 };
 
 export default Header;
-
-
-

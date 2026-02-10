@@ -46,7 +46,7 @@ export function useSchoolYears() {
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'Lỗi khi tải danh sách năm học';
       setError(errorMessage);
-      console.error('Error fetching school years:', e);
+      // console.error('Error fetching school years:', e);
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ export function useSchoolClasses(grade?: number) {
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'Lỗi khi tải danh sách lớp học';
       setError(errorMessage);
-      console.error('Error fetching school classes:', e);
+      // console.error('Error fetching school classes:', e);
     } finally {
       setLoading(false);
     }
@@ -110,7 +110,7 @@ export function useTimetable() {
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'Lỗi khi tải thời khóa biểu';
       setError(errorMessage);
-      console.error('Error fetching timetable:', e);
+      // console.error('Error fetching timetable:', e);
     } finally {
       setLoading(false);
     }

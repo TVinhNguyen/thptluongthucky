@@ -152,7 +152,7 @@ const AboutPage = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
             <div className="lg:col-span-2">
-              <Card className="overflow-hidden shadow-card hover:shadow-card-hover transition-shadow animate-fade-in">
+              <Card className="overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:shadow-card-hover transition-shadow animate-fade-in">
                 <div className="p-6 md:p-8">
                   <Badge className="mb-4">Giới thiệu</Badge>
                   <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
@@ -182,7 +182,7 @@ const AboutPage = () => {
 
             <div className="lg:col-span-1 space-y-4">
               {highlightSections.map((section) => (
-                <Card key={section.title} className="p-5 shadow-card animate-fade-in">
+                <Card key={section.title} className="p-5 shadow-card animate-fade-in shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="p-2 rounded-full bg-primary/10 text-primary">
                       <section.icon className="w-5 h-5" />

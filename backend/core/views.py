@@ -243,8 +243,16 @@ class StaffViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = StaffSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['department', 'position']
+    filterset_fields = ['department']
     search_fields = ['full_name', 'email', 'phone']
+
+    def get_queryset(self):
+        """Support case-insensitive position filtering via ?position=..."""
+        queryset = super().get_queryset()
+        position = self.request.query_params.get('position')
+        if position:
+            queryset = queryset.filter(position__iexact=position)
+        return queryset
 
 
 class PhotoAlbumViewSet(viewsets.ReadOnlyModelViewSet):

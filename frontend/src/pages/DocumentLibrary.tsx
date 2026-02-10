@@ -149,7 +149,7 @@ const DocumentLibrary = () => {
               {DOCUMENT_LIBRARY_TEXT.title}
             </h1>
 
-            <Card className="bg-card shadow-card overflow-hidden mb-6">
+            <Card className="bg-card overflow-hidden mb-6  shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
               <div className="p-4">
                 <div className="flex gap-2">
                   <div className="relative flex-1">
@@ -174,7 +174,7 @@ const DocumentLibrary = () => {
               </div>
             </Card>
 
-            <Card className="bg-card shadow-card overflow-hidden">
+            <Card className="bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
               <Tabs
                 value={activeTab}
                 onValueChange={(value) =>
