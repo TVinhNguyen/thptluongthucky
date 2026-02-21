@@ -20,7 +20,7 @@ const LeftSidebar = () => {
     {
       title: SIDEBAR_TEXT.sectionTitles.news,
       items: [
-        { label: SIDEBAR_TEXT.items.thoiKhoaBieu, href: "/thoi-khoa-bieu" },
+        { label: SIDEBAR_TEXT.items.thoiKhoaBieu, href: "/chuyen-muc/thoi-khoa-bieu" },
         {
           label: SIDEBAR_TEXT.items.thiKiemTra,
           href: buildCategoryUrl(
