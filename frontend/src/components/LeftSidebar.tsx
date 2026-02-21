@@ -7,13 +7,22 @@ const LeftSidebar = () => {
   const sections = [
     {
       title: SIDEBAR_TEXT.sectionTitles.intro,
+      // items: [
+      //   { label: SIDEBAR_TEXT.items.banGiamHieu, href: "/can-bo-giao-vien?filter=ban-giam-hieu" },
+      //   { label: SIDEBAR_TEXT.items.chiBoDang, href: "/co-cau-to-chuc#chi-bo-dang" },
+      //   // { label: "BCH Công Đoàn", href: "/co-cau-to-chuc#cong-doan" },
+      //   { label: SIDEBAR_TEXT.items.doanThanhNien, href: "/co-cau-to-chuc#doan-thanh-nien" },
+      //   { label: SIDEBAR_TEXT.items.toVanPhong, href: "/can-bo-giao-vien?filter=van-phong" },
+      //   { label: SIDEBAR_TEXT.items.toChuyenMon, href: "/can-bo-giao-vien?filter=chuyen-mon" },
+      //   { label: SIDEBAR_TEXT.items.hoiChaMeHocSinh, href: "/can-bo-giao-vien?filter=hoi-cha-me-hoc-sinh" },
+      // ],
       items: [
-        { label: SIDEBAR_TEXT.items.banGiamHieu, href: "/can-bo-giao-vien?filter=ban-giam-hieu" },
+        { label: SIDEBAR_TEXT.items.banGiamHieu, href: "/can-bo-giao-vien" },
         { label: SIDEBAR_TEXT.items.chiBoDang, href: "/co-cau-to-chuc#chi-bo-dang" },
         // { label: "BCH Công Đoàn", href: "/co-cau-to-chuc#cong-doan" },
         { label: SIDEBAR_TEXT.items.doanThanhNien, href: "/co-cau-to-chuc#doan-thanh-nien" },
-        { label: SIDEBAR_TEXT.items.toVanPhong, href: "/can-bo-giao-vien?filter=van-phong" },
-        { label: SIDEBAR_TEXT.items.toChuyenMon, href: "/can-bo-giao-vien?filter=chuyen-mon" },
+        { label: SIDEBAR_TEXT.items.toVanPhong, href: "/can-bo-giao-vien" },
+        { label: SIDEBAR_TEXT.items.toChuyenMon, href: "/can-bo-giao-vien" },
         { label: SIDEBAR_TEXT.items.hoiChaMeHocSinh, href: "/can-bo-giao-vien?filter=hoi-cha-me-hoc-sinh" },
       ],
     },

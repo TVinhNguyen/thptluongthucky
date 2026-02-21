@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import NewsCard from "./NewsCard";
 import { useFeaturedPosts, usePostsByCategory } from "@/hooks/useApi";
@@ -6,9 +7,30 @@ import { formatDate } from "@/lib/api";
 
 const MainContent = () => {
   const { data: featuredPosts, isLoading: loadingFeatured } = useFeaturedPosts();
-  const { data: planPosts, isLoading: loadingPlan } = usePostsByCategory('ke-hoach-giao-duc');
+  const { data: planPosts, isLoading: loadingPlanParent } = usePostsByCategory('ke-hoach-giao-duc');
+  const { data: planExamPosts, isLoading: loadingPlanExam } = usePostsByCategory('thi-kiem-tra');
   const { data: examPosts, isLoading: loadingExam } = usePostsByCategory('thi-tuyen-sinh');
   const { data: activityPosts, isLoading: loadingActivity } = usePostsByCategory('hoat-dong-su-kien');
+
+  const hasParentPlanPosts = (planPosts?.results?.length ?? 0) > 0;
+
+  const planSectionPosts = useMemo(() => {
+    if (hasParentPlanPosts) {
+      return planPosts?.results ?? [];
+    }
+
+    const fallbackPosts = [...(planExamPosts?.results ?? [])];
+
+    return fallbackPosts.sort((a, b) => {
+      const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
+      const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
+      return dateB - dateA;
+    });
+  }, [hasParentPlanPosts, planPosts?.results, planExamPosts?.results]);
+
+  const loadingPlan =
+    loadingPlanParent ||
+    (!hasParentPlanPosts && loadingPlanExam);
 
   const LoadingSkeleton = () => (
     <div className="space-y-3">
@@ -96,8 +118,8 @@ const MainContent = () => {
           <div className="p-4 space-y-3">
             {loadingPlan ? (
               <LoadingSkeleton />
-            ) : planPosts?.results && planPosts.results.length > 0 ? (
-              planPosts.results.slice(0, 3).map((post) => (
+            ) : planSectionPosts.length > 0 ? (
+              planSectionPosts.slice(0, 3).map((post) => (
                 <div key={post.id} className="mb-4 last:mb-0">
                 <NewsCard
                   key={post.id}
