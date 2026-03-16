@@ -377,6 +377,60 @@ class ContactMessage(models.Model):
         return f"{self.full_name} - {self.subject or 'Liên hệ'}"
 
 
+class SiteSetting(models.Model):
+    """Global UI settings editable in Django admin."""
+
+    sidebar_documents_title = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name="Sidebar documents title",
+        help_text="Override the left sidebar 'Documents' section title (optional).",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Site setting"
+        verbose_name_plural = "Site settings"
+
+    def __str__(self):
+        return "Site settings"
+
+
+class SidebarDocumentItem(models.Model):
+    site_setting = models.ForeignKey(
+        SiteSetting,
+        on_delete=models.CASCADE,
+        related_name="document_items",
+        verbose_name="Site setting",
+    )
+    label = models.CharField(max_length=255, verbose_name="Label")
+    document_source = models.CharField(
+        max_length=50,
+        choices=Document.DOC_SOURCE_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="Document source",
+    )
+    sort_order = models.IntegerField(default=0, verbose_name="Sort order")
+    is_active = models.BooleanField(default=True, verbose_name="Active")
+
+    class Meta:
+        verbose_name = "Sidebar document item"
+        verbose_name_plural = "Sidebar document items"
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return self.label
+
+    @property
+    def href(self):
+        if not self.document_source:
+            return "/thu-vien-van-ban"
+        return f"/thu-vien-van-ban?source={self.document_source}"
+
+
 # ============= TIMETABLE MODELS =============
 
 class SchoolYear(models.Model):

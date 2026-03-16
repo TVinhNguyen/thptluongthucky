@@ -8,7 +8,7 @@ from unfold.admin import ModelAdmin
 from .models import (
     Category, Post, Page, Document, Department, Staff,
     PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage,
-    SchoolYear, SchoolClass, TimetableEntry
+    SiteSetting, SidebarDocumentItem, SchoolYear, SchoolClass, TimetableEntry
 )
 from .utils import import_timetable_from_excel
 
@@ -234,6 +234,39 @@ class ContactMessageAdmin(ModelAdmin):
     def mark_as_replied(self, request, queryset):
         updated = queryset.update(status='REPLIED')
         self.message_user(request, f'{updated} tin nhắn đã được đánh dấu đã trả lời.')
+
+
+class SidebarDocumentItemInline(admin.TabularInline):
+    model = SidebarDocumentItem
+    extra = 1
+    fields = ['label', 'document_source', 'sort_order', 'is_active']
+    ordering = ['sort_order', 'id']
+
+
+@admin.register(SiteSetting)
+class SiteSettingAdmin(ModelAdmin):
+    list_display = ['sidebar_documents_title', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at']
+    ordering = ['-updated_at']
+    inlines = [SidebarDocumentItemInline]
+
+    fieldsets = (
+        ('Sidebar', {
+            'fields': ('sidebar_documents_title',),
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+
+    def has_add_permission(self, request):
+        if SiteSetting.objects.exists():
+            return False
+        return super().has_add_permission(request)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 # ============= TIMETABLE ADMIN =============

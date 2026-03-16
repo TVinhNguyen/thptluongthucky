@@ -210,6 +210,15 @@ export function useExternalLinks() {
   });
 }
 
+// Site Settings hooks
+export function useSiteSettings() {
+  return useQuery({
+    queryKey: ['siteSettings'],
+    queryFn: api.siteSettings.get,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
+
 // Contact hooks
 export function useSendContact() {
   return useMutation({

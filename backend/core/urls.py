@@ -25,6 +25,7 @@ app_name = 'core'
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('site-settings/', views.SiteSettingView.as_view(), name='site-settings'),
     # Custom endpoint cho import TKB
     path('timetable/import/', views.TimetableImportView.as_view(), name='timetable-import'),
 ]

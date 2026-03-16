@@ -12,7 +12,7 @@ import logging
 from .models import (
     Category, Post, Page, Document, Department, Staff,
     PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage,
-    SchoolYear, SchoolClass, TimetableEntry
+    SiteSetting, SchoolYear, SchoolClass, TimetableEntry
 )
 from .serializers import (
     CategorySerializer, PostListSerializer, PostDetailSerializer,
@@ -334,6 +334,35 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
             {'message': 'Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất.', 
              'data': serializer.data},
             status=status.HTTP_201_CREATED
+        )
+
+
+class SiteSettingView(APIView):
+    """Public endpoint for frontend UI settings."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        setting = SiteSetting.objects.order_by('-updated_at').first()
+        title = None
+        items = []
+
+        if setting:
+            candidate = (setting.sidebar_documents_title or "").strip()
+            title = candidate or None
+            items = [
+                {
+                    "label": item.label,
+                    "href": item.href,
+                }
+                for item in setting.document_items.filter(is_active=True).order_by('sort_order', 'id')
+            ]
+
+        return Response(
+            {
+                "sidebar_documents_title": title,
+                "sidebar_documents_items": items,
+            }
         )
 
 

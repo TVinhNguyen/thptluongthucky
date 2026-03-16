@@ -142,6 +142,14 @@ export interface ContactMessage {
   message: string;
 }
 
+export interface SiteSettings {
+  sidebar_documents_title: string | null;
+  sidebar_documents_items: Array<{
+    label: string;
+    href: string;
+  }>;
+}
+
 export interface PaginatedResponse<T> {
   count: number;
   next: string | null;
@@ -257,6 +265,11 @@ export const api = {
   // External Links
   externalLinks: {
     getAll: () => fetchAPI<ExternalLink[]>('/external-links/'),
+  },
+
+  // Site Settings
+  siteSettings: {
+    get: () => fetchAPI<SiteSettings>('/site-settings/'),
   },
 
   // Contact
