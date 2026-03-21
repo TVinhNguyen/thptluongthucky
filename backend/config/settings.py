@@ -167,9 +167,21 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
+# CSRF Configuration for production
+CSRF_TRUSTED_ORIGINS = [
+    "https://thptluongthucky.edu.vn",
+    "https://www.thptluongthucky.edu.vn",
+    "http://localhost:3000",
+    "http://localhost:5173",
+]
+
 # Allow all origins in development
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
+    CSRF_TRUSTED_ORIGINS.extend([
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ])
 
 
 UNFOLD = {

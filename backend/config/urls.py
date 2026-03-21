@@ -26,6 +26,7 @@ from core import views_errors
 urlpatterns = [
     path('', RedirectView.as_view(url='/api/', permanent=False)),
     path('admin/', admin.site.urls),
+    path('health/', lambda r: JsonResponse({"status": "ok"})),  # Health check endpoint
     path('api/', include('core.urls')),  # API endpoints
     path('ckeditor5/', include('django_ckeditor_5.urls')),  # CKEditor 5 upload
 ]

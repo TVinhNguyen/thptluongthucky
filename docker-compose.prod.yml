@@ -1,16 +1,31 @@
 services:
+  # ─────────────────────────────────────────
+  # Database
+  # ─────────────────────────────────────────
   db:
     image: postgres:15-alpine
-    restart: always
+    restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file: .env
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
-  web:
-    build: ./backend
-    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+  # ─────────────────────────────────────────
+  # Backend (Django + Gunicorn)
+  # ─────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    command: sh -c "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60 --access-logfile - --error-logfile -"
     volumes:
       - static_data:/app/staticfiles
       - media_data:/app/media
@@ -18,18 +33,56 @@ services:
       - "8000"
     env_file: .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # ─────────────────────────────────────────
+  # Frontend (Vue + Nginx)
+  # ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      target: production
+      args:
+        # Caddy sẽ handle HTTPS, frontend chỉ cần biết domain
+        VITE_API_URL: ${VITE_API_URL}
+    restart: unless-stopped
+    volumes:
+      # Mount static và media từ backend để nginx serve trực tiếp
+      - static_data:/usr/share/nginx/static:ro
+      - media_data:/usr/share/nginx/media:ro
+    depends_on:
+      backend:
+        condition: service_healthy
     networks:
       - app-network
 
-  frontend:
-    build: 
-      context: ./frontend
-      target: production
+  # ─────────────────────────────────────────
+  # Caddy - Reverse Proxy + Auto HTTPS (Let's Encrypt)
+  # Thay thế việc expose port 80/443 trực tiếp từ frontend
+  # ─────────────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3 (QUIC)
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data           # Lưu certificate Let's Encrypt
+      - caddy_config:/config       # Lưu config cache
     depends_on:
-      - web
+      - frontend
     networks:
       - app-network
 
@@ -41,3 +94,5 @@ volumes:
   postgres_data:
   static_data:
   media_data:
+  caddy_data:
+  caddy_config:
