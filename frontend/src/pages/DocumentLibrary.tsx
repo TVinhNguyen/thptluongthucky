@@ -12,8 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, FileText, Download, Eye } from "lucide-react";
 import { useDocuments, useDownloadDocument } from "@/hooks/useApi";
-import { formatDate, formatFileSize, getMediaUrl } from "@/lib/api";
+import { formatDate, formatFileSize } from "@/lib/api";
 import type { Document } from "@/lib/api";
+import { DOCUMENT_LIBRARY_TEXT } from "@/constants/appText";
 
 const DocumentLibrary = () => {
   const [searchTerm, setSearchTerm] = useState<string | undefined>(undefined);
@@ -87,7 +88,9 @@ const DocumentLibrary = () => {
                 {formatDate(doc.published_date || doc.created_at)}
                 {doc.file_size ? ` • ${formatFileSize(doc.file_size)}` : ""}
                 {doc.signer ? ` • ${doc.signer}` : ""}
-                {doc.download_count > 0 ? ` • ${doc.download_count} lượt tải` : ""}
+                {doc.download_count > 0
+                  ? ` • ${doc.download_count} ${DOCUMENT_LIBRARY_TEXT.downloadCountLabel}`
+                  : ""}
               </p>
             </div>
           </div>
@@ -96,7 +99,7 @@ const DocumentLibrary = () => {
               variant="ghost"
               size="sm"
               onClick={() => setSelectedDoc(doc)}
-              title="Xem trước"
+              title={DOCUMENT_LIBRARY_TEXT.previewTitle}
             >
               <Eye className="w-4 h-4" />
             </Button>
@@ -107,7 +110,7 @@ const DocumentLibrary = () => {
               disabled={downloadMutation.isPending}
             >
               <Download className="w-4 h-4 mr-2" />
-              Tải xuống
+              {DOCUMENT_LIBRARY_TEXT.downloadLabel}
             </Button>
           </div>
         </div>
@@ -140,19 +143,19 @@ const DocumentLibrary = () => {
       <div className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-5xl mx-auto">
-            <Breadcrumb items={[{ label: "Thư viện văn bản" }]} />
+            <Breadcrumb items={[{ label: DOCUMENT_LIBRARY_TEXT.breadcrumb }]} />
 
             <h1 className="text-3xl font-bold text-foreground mb-6 animate-fade-in">
-              Thư viện Văn bản
+              {DOCUMENT_LIBRARY_TEXT.title}
             </h1>
 
-            <Card className="bg-card shadow-card overflow-hidden mb-6">
+            <Card className="bg-card overflow-hidden mb-6  shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
               <div className="p-4">
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                     <Input
-                      placeholder="Tìm kiếm văn bản..."
+                      placeholder={DOCUMENT_LIBRARY_TEXT.searchPlaceholder}
                       className="pl-10"
                       value={searchInput}
                       onChange={(e) => {
@@ -166,12 +169,12 @@ const DocumentLibrary = () => {
                       }}
                     />
                   </div>
-                  <Button onClick={handleSearch}>Tìm kiếm</Button>
+                  <Button onClick={handleSearch}>{DOCUMENT_LIBRARY_TEXT.searchButton}</Button>
                 </div>
               </div>
             </Card>
 
-            <Card className="bg-card shadow-card overflow-hidden">
+            <Card className="bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
               <Tabs
                 value={activeTab}
                 onValueChange={(value) =>
@@ -185,19 +188,19 @@ const DocumentLibrary = () => {
                       value="all"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
                     >
-                      Tất cả
+                      {DOCUMENT_LIBRARY_TEXT.tabs.all}
                     </TabsTrigger>
                     <TabsTrigger
                       value="CONG_VAN"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
                     >
-                      Công văn
+                      {DOCUMENT_LIBRARY_TEXT.tabs.congVan}
                     </TabsTrigger>
                     <TabsTrigger
                       value="QUYET_DINH"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
                     >
-                      Quyết định
+                      {DOCUMENT_LIBRARY_TEXT.tabs.quyetDinh}
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -211,7 +214,7 @@ const DocumentLibrary = () => {
                       <DocumentList docs={documents} />
                     ) : (
                       <p className="text-center text-muted-foreground py-8">
-                        Không tìm thấy văn bản nào
+                        {DOCUMENT_LIBRARY_TEXT.empty}
                       </p>
                     )}
                   </TabsContent>

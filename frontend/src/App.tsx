@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import PostDetail from "./pages/PostDetail";
 import DocumentLibrary from "./pages/DocumentLibrary";
+import SearchAll from "./pages/SearchAll";
 import OrgChart from "./pages/OrgChart";
 import Staff from "./pages/Staff";
 import NotFound from "./pages/NotFound";
@@ -23,6 +24,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/tim-kiem" element={<SearchAll />} />
           <Route path="/bai-viet/:id" element={<PostDetail />} />
           <Route path="/chuyen-muc/:category" element={<CategoryRoute />} />
           <Route path="/chuyen-muc/:category/:slug" element={<CategoryRoute />} />
@@ -34,7 +36,7 @@ const App = () => (
           <Route path="/gioi-thieu" element={<AboutPage />} />
           <Route path="/co-cau-to-chuc" element={<OrgChart />} />
           <Route path="/can-bo-giao-vien" element={<Staff />} />
-          <Route path="/thoi-khoa-bieu" element={<TimetablePage />} />
+          <Route path="/chuyen-muc/thoi-khoa-bieu" element={<TimetablePage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

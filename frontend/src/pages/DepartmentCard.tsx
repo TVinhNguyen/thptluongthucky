@@ -15,7 +15,7 @@ const DepartmentCard = ({ dept }: DepartmentCardProps) => {
   const { data: staff = [], isLoading } = useDepartmentStaff(dept.id);
 
   return (
-    <Card className="bg-card shadow-card hover:shadow-card-hover transition-all hover-scale overflow-hidden animate-fade-in">
+    <Card className="bg-card hover:shadow-card-hover transition-all hover-scale overflow-hidden animate-fade-in shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
       <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
         {dept.name}
       </div>

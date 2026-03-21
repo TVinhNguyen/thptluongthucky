@@ -17,13 +17,27 @@ def delete_photo_image(sender, instance, **kwargs):
 @receiver(post_delete, sender=Video)
 def delete_video_assets(sender, instance, **kwargs):
     if instance.thumbnail:
-        cloudinary.uploader.destroy(instance.thumbnail.public_id)
+        try:
+            if hasattr(instance.thumbnail, "public_id") and instance.thumbnail.public_id:
+                cloudinary.uploader.destroy(instance.thumbnail.public_id)
+            else:
+                # Fallback for local storage ImageField
+                instance.thumbnail.delete(save=False)
+        except Exception:
+            pass
 
     if hasattr(instance, "video_file") and instance.video_file:
-        cloudinary.uploader.destroy(
-            instance.video_file.public_id,
-            resource_type="video"
-        )
+        try:
+            if hasattr(instance.video_file, "public_id") and instance.video_file.public_id:
+                cloudinary.uploader.destroy(
+                    instance.video_file.public_id,
+                    resource_type="video"
+                )
+            else:
+                # Fallback for local storage FileField
+                instance.video_file.delete(save=False)
+        except Exception:
+            pass
 
 @receiver(post_delete, sender=Document)
 def delete_document_file(sender, instance, **kwargs):

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import NewsCard from "./NewsCard";
 import { useFeaturedPosts, usePostsByCategory } from "@/hooks/useApi";
@@ -6,9 +7,30 @@ import { formatDate } from "@/lib/api";
 
 const MainContent = () => {
   const { data: featuredPosts, isLoading: loadingFeatured } = useFeaturedPosts();
-  const { data: planPosts, isLoading: loadingPlan } = usePostsByCategory('ke-hoach-giao-duc');
+  const { data: planPosts, isLoading: loadingPlanParent } = usePostsByCategory('ke-hoach-giao-duc');
+  const { data: planExamPosts, isLoading: loadingPlanExam } = usePostsByCategory('thi-kiem-tra');
   const { data: examPosts, isLoading: loadingExam } = usePostsByCategory('thi-tuyen-sinh');
   const { data: activityPosts, isLoading: loadingActivity } = usePostsByCategory('hoat-dong-su-kien');
+
+  const hasParentPlanPosts = (planPosts?.results?.length ?? 0) > 0;
+
+  const planSectionPosts = useMemo(() => {
+    if (hasParentPlanPosts) {
+      return planPosts?.results ?? [];
+    }
+
+    const fallbackPosts = [...(planExamPosts?.results ?? [])];
+
+    return fallbackPosts.sort((a, b) => {
+      const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
+      const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
+      return dateB - dateA;
+    });
+  }, [hasParentPlanPosts, planPosts?.results, planExamPosts?.results]);
+
+  const loadingPlan =
+    loadingPlanParent ||
+    (!hasParentPlanPosts && loadingPlanExam);
 
   const LoadingSkeleton = () => (
     <div className="space-y-3">
@@ -28,7 +50,7 @@ const MainContent = () => {
     <main className="space-y-6">
       {/* Tin mới nhất */}
       <section>
-        <Card className="bg-card shadow-card overflow-hidden">
+        <Card className="bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
             Tin mới nhất
           </div>
@@ -59,7 +81,7 @@ const MainContent = () => {
 
       {/* Thi và Tuyển sinh */}
       <section>
-        <Card className="bg-card shadow-card overflow-hidden">
+        <Card className="bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
             Thi & Tuyển sinh
           </div>
@@ -89,15 +111,15 @@ const MainContent = () => {
 
       {/* Kế hoạch */}
       <section>
-        <Card className="bg-card shadow-card overflow-hidden">
+        <Card className="bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
             Kế hoạch giáo dục
           </div>
           <div className="p-4 space-y-3">
             {loadingPlan ? (
               <LoadingSkeleton />
-            ) : planPosts?.results && planPosts.results.length > 0 ? (
-              planPosts.results.slice(0, 3).map((post) => (
+            ) : planSectionPosts.length > 0 ? (
+              planSectionPosts.slice(0, 3).map((post) => (
                 <div key={post.id} className="mb-4 last:mb-0">
                 <NewsCard
                   key={post.id}
@@ -120,7 +142,7 @@ const MainContent = () => {
 
       {/* Hoạt động Đoàn thể */}
       <section>
-        <Card className="bg-card shadow-card overflow-hidden">
+        <Card className="bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
             Hoạt động Đoàn thể
           </div>

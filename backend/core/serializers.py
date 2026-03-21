@@ -132,11 +132,22 @@ class DepartmentSerializer(serializers.ModelSerializer):
 class StaffSerializer(serializers.ModelSerializer):
     """Serializer cho nhân sự"""
     department_name = serializers.CharField(source='department.name', read_only=True)
+    filter_tags = serializers.SerializerMethodField()
     
     class Meta:
         model = Staff
         fields = ['id', 'full_name', 'avatar', 'position', 'department', 
-                  'department_name', 'email', 'phone', 'bio', 'sort_order', 'is_active']
+                  'department_name', 'email', 'phone', 'bio', 'filter_tags', 'sort_order', 'is_active']
+
+    def get_filter_tags(self, obj):
+        return [
+            {
+                "id": tag.id,
+                "name": tag.name,
+                "slug": tag.slug,
+            }
+            for tag in obj.filter_tags.filter(is_active=True).order_by('sort_order', 'name')
+        ]
 
 
 class PhotoSerializer(serializers.ModelSerializer):

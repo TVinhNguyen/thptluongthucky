@@ -130,7 +130,7 @@ export function useDepartmentStaff(id: number) {
 }
 
 // Staff hooks
-export function useStaff(params?: { department?: number; position?: string; search?: string }) {
+export function useStaff(params?: { department?: number; position?: string; search?: string; filter?: string }) {
   return useQuery({
     queryKey: ['staff', params],
     queryFn: () => api.staff.getAll(params),
@@ -206,6 +206,15 @@ export function useExternalLinks() {
   return useQuery({
     queryKey: ['externalLinks'],
     queryFn: api.externalLinks.getAll,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
+
+// Site Settings hooks
+export function useSiteSettings() {
+  return useQuery({
+    queryKey: ['siteSettings'],
+    queryFn: api.siteSettings.get,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }
