@@ -143,8 +143,11 @@ export interface ContactMessage {
 }
 
 export interface SiteSettings {
-  sidebar_documents_title: string | null;
   sidebar_documents_items: Array<{
+    label: string;
+    href: string;
+  }>;
+  sidebar_news_items: Array<{
     label: string;
     href: string;
   }>;

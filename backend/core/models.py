@@ -431,6 +431,43 @@ class SidebarDocumentItem(models.Model):
         return f"/thu-vien-van-ban?source={self.document_source}"
 
 
+class SidebarNewsItem(models.Model):
+    site_setting = models.ForeignKey(
+        SiteSetting,
+        on_delete=models.CASCADE,
+        related_name="news_items",
+        verbose_name="Site setting",
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sidebar_news_items",
+        verbose_name="Category",
+    )
+    sort_order = models.IntegerField(default=0, verbose_name="Sort order")
+    is_active = models.BooleanField(default=True, verbose_name="Active")
+
+    class Meta:
+        verbose_name = "Sidebar news item"
+        verbose_name_plural = "Sidebar news items"
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return self.label
+
+    @property
+    def label(self):
+        return self.category.name if self.category else "Unknown category"
+
+    @property
+    def href(self):
+        if not self.category:
+            return "/"
+        return f"/chuyen-muc/{self.category.slug}"
+
+
 # ============= TIMETABLE MODELS =============
 
 class SchoolYear(models.Model):

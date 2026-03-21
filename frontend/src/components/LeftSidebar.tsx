@@ -6,16 +6,26 @@ import { useSiteSettings } from "@/hooks/useApi";
 
 const LeftSidebar = () => {
   const { data: siteSettings } = useSiteSettings();
-  const documentsTitle =
-    siteSettings?.sidebar_documents_title?.trim() || SIDEBAR_TEXT.sectionTitles.documents;
   const defaultDocumentItems = [
     { label: SIDEBAR_TEXT.items.soGddt, href: "/thu-vien-van-ban?source=SO_GDDT" },
     { label: SIDEBAR_TEXT.items.vanBanTruong, href: "/thu-vien-van-ban?source=TRUONG" },
     { label: SIDEBAR_TEXT.items.vanBanHdndUbnd, href: "/thu-vien-van-ban?source=HDND_UBND" },
     { label: SIDEBAR_TEXT.items.thongBaoPhoBien, href: "/thu-vien-van-ban?source=THONG_BAO" },
   ];
+  const defaultNewsItems = [
+    { label: SIDEBAR_TEXT.items.thoiKhoaBieu, href: "/chuyen-muc/thoi-khoa-bieu" },
+    {
+      label: SIDEBAR_TEXT.items.thiKiemTra,
+      href: buildCategoryUrl(
+        SIDEBAR_SEARCH_CONFIG.THI_KIEM_TRA.category,
+        SIDEBAR_SEARCH_CONFIG.THI_KIEM_TRA.keywords,
+        SIDEBAR_SEARCH_CONFIG.BASE_PATH
+      ),
+    },
+  ];
   const documentItems =
     siteSettings?.sidebar_documents_items?.length ? siteSettings.sidebar_documents_items : defaultDocumentItems;
+  const newsItems = siteSettings?.sidebar_news_items?.length ? siteSettings.sidebar_news_items : defaultNewsItems;
 
   const sections = [
     {
@@ -43,21 +53,11 @@ const LeftSidebar = () => {
     {
       id: "news",
       title: SIDEBAR_TEXT.sectionTitles.news,
-      items: [
-        { label: SIDEBAR_TEXT.items.thoiKhoaBieu, href: "/chuyen-muc/thoi-khoa-bieu" },
-        {
-          label: SIDEBAR_TEXT.items.thiKiemTra,
-          href: buildCategoryUrl(
-            SIDEBAR_SEARCH_CONFIG.THI_KIEM_TRA.category,
-            SIDEBAR_SEARCH_CONFIG.THI_KIEM_TRA.keywords,
-            SIDEBAR_SEARCH_CONFIG.BASE_PATH
-          ),
-        },
-      ],
+      items: newsItems,
     },
     {
       id: "documents",
-      title: documentsTitle,
+      title: SIDEBAR_TEXT.sectionTitles.documents,
       items: documentItems,
     },
     {

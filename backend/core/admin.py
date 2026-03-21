@@ -4,11 +4,13 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import path
+from django.urls import reverse
 from unfold.admin import ModelAdmin
 from .models import (
     Category, Post, Page, Document, Department, Staff,
+    StaffGroup,
     PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage,
-    SiteSetting, SidebarDocumentItem, SchoolYear, SchoolClass, TimetableEntry
+    SiteSetting, SidebarDocumentItem, SidebarNewsItem, SchoolYear, SchoolClass, TimetableEntry
 )
 from .utils import import_timetable_from_excel
 
@@ -138,12 +140,22 @@ class DepartmentAdmin(ModelAdmin):
     ordering = ['sort_order', 'name']
 
 
+@admin.register(StaffGroup)
+class StaffGroupAdmin(ModelAdmin):
+    list_display = ['name', 'slug', 'sort_order', 'is_active']
+    list_filter = ['is_active']
+    search_fields = ['name', 'slug']
+    ordering = ['sort_order', 'name']
+    list_editable = ['sort_order', 'is_active']
+
+
 @admin.register(Staff)
 class StaffAdmin(ModelAdmin):
     list_display = ['full_name', 'position', 'department', 'email', 'phone', 'is_active']
-    list_filter = ['is_active', 'department', 'position']
+    list_filter = ['is_active', 'department', 'position', 'sidebar_groups']
     search_fields = ['full_name', 'email', 'phone']
     ordering = ['sort_order', 'full_name']
+    filter_horizontal = ['sidebar_groups']
 
 
 class PhotoInline(admin.TabularInline):
@@ -243,17 +255,40 @@ class SidebarDocumentItemInline(admin.TabularInline):
     ordering = ['sort_order', 'id']
 
 
+class SidebarNewsItemInline(admin.TabularInline):
+    model = SidebarNewsItem
+    extra = 1
+    fields = ['category', 'sort_order', 'is_active']
+    ordering = ['sort_order', 'id']
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == 'category':
+            formfield.widget.can_add_related = False
+            formfield.widget.can_change_related = False
+            formfield.widget.can_delete_related = False
+            formfield.widget.can_view_related = True
+        return formfield
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        category_field = formset.form.base_fields.get('category')
+        if category_field and hasattr(category_field.widget, 'can_add_related'):
+            category_field.widget.can_add_related = False
+            category_field.widget.can_change_related = False
+            category_field.widget.can_delete_related = False
+            category_field.widget.can_view_related = True
+        return formset
+
+
 @admin.register(SiteSetting)
 class SiteSettingAdmin(ModelAdmin):
-    list_display = ['sidebar_documents_title', 'updated_at']
+    list_display = ['updated_at']
     readonly_fields = ['created_at', 'updated_at']
     ordering = ['-updated_at']
-    inlines = [SidebarDocumentItemInline]
+    inlines = [SidebarDocumentItemInline, SidebarNewsItemInline]
 
     fieldsets = (
-        ('Sidebar', {
-            'fields': ('sidebar_documents_title',),
-        }),
         ('Metadata', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',),
@@ -261,12 +296,15 @@ class SiteSettingAdmin(ModelAdmin):
     )
 
     def has_add_permission(self, request):
-        if SiteSetting.objects.exists():
-            return False
-        return super().has_add_permission(request)
+        return False
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def changelist_view(self, request, extra_context=None):
+        setting, _ = SiteSetting.objects.get_or_create()
+        url = reverse('admin:core_sitesetting_change', args=[setting.pk])
+        return redirect(url)
 
 
 # ============= TIMETABLE ADMIN =============

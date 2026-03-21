@@ -344,24 +344,29 @@ class SiteSettingView(APIView):
 
     def get(self, request):
         setting = SiteSetting.objects.order_by('-updated_at').first()
-        title = None
-        items = []
+        document_items = []
+        news_items = []
 
         if setting:
-            candidate = (setting.sidebar_documents_title or "").strip()
-            title = candidate or None
-            items = [
+            document_items = [
                 {
                     "label": item.label,
                     "href": item.href,
                 }
                 for item in setting.document_items.filter(is_active=True).order_by('sort_order', 'id')
             ]
+            news_items = [
+                {
+                    "label": item.label,
+                    "href": item.href,
+                }
+                for item in setting.news_items.filter(is_active=True).order_by('sort_order', 'id')
+            ]
 
         return Response(
             {
-                "sidebar_documents_title": title,
-                "sidebar_documents_items": items,
+                "sidebar_documents_items": document_items,
+                "sidebar_news_items": news_items,
             }
         )
 
