@@ -16,12 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
 
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('health/', lambda r: JsonResponse({"status": "ok"})),  # Health check endpoint
     path('api/', include('core.urls')),  # API endpoints
     path('ckeditor5/', include('django_ckeditor_5.urls')),  # CKEditor 5 upload
 ]
