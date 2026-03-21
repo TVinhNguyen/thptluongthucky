@@ -43,11 +43,6 @@ class Migration(migrations.Migration):
                 'ordering': ['-start_date'],
             },
         ),
-        migrations.AddField(
-            model_name='document',
-            name='doc_source',
-            field=models.CharField(blank=True, choices=[('SO_GDDT', 'Sở GD&ĐT'), ('TRUONG', 'Trường'), ('HDND_UBND', 'HĐND-UBND xã'), ('THONG_BAO', 'Thông báo')], max_length=50, null=True, verbose_name='Phát hành'),
-        ),
         migrations.CreateModel(
             name='TimetableEntry',
             fields=[
