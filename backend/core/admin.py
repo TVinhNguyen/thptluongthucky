@@ -306,6 +306,9 @@ class SiteSettingAdmin(ModelAdmin):
     inlines = [SidebarDocumentItemInline, SidebarNewsItemInline, SidebarIntroItemInline]
 
     fieldsets = (
+        ('Noi dung right sidebar', {
+            'fields': ('quote_title', 'quote_content', 'quote_author'),
+        }),
         ('Metadata', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',),

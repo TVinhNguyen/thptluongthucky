@@ -382,6 +382,9 @@ class SiteSettingView(APIView):
                 "sidebar_documents_items": document_items,
                 "sidebar_news_items": news_items,
                 "sidebar_intro_items": intro_items,
+                "quote_title": setting.quote_title if setting else "",
+                "quote_content": setting.quote_content if setting else "",
+                "quote_author": setting.quote_author if setting else "",
             }
         )
 

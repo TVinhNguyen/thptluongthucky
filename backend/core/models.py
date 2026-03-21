@@ -416,6 +416,23 @@ class SiteSetting(models.Model):
         verbose_name="Sidebar documents title",
         help_text="Override the left sidebar 'Documents' section title (optional).",
     )
+    quote_title = models.CharField(
+        max_length=255,
+        blank=True,
+        default="Loi Chu tich Ho Chi Minh",
+        verbose_name="Tieu de trich dan",
+    )
+    quote_content = models.TextField(
+        blank=True,
+        default='"Vi loi ich muoi nam phai trong cay, vi loi ich tram nam phai trong nguoi"',
+        verbose_name="Noi dung trich dan",
+    )
+    quote_author = models.CharField(
+        max_length=255,
+        blank=True,
+        default="Ho Chi Minh",
+        verbose_name="Tac gia trich dan",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

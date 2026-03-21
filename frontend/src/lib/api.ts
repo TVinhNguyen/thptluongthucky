@@ -143,6 +143,9 @@ export interface ContactMessage {
 }
 
 export interface SiteSettings {
+  quote_title: string;
+  quote_content: string;
+  quote_author: string;
   sidebar_intro_items: Array<{
     label: string;
     href: string;
