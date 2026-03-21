@@ -42,10 +42,10 @@ export function useFeaturedPosts() {
   });
 }
 
-export function usePostsByCategory(categorySlug: string, page?: number) {
+export function usePostsByCategory(categorySlug: string, page?: number, search?: string | null) {
   return useQuery({
-    queryKey: ['posts', 'category', categorySlug, page],
-    queryFn: () => api.posts.getByCategory(categorySlug, page),
+    queryKey: ['posts', 'category', categorySlug, page, search],
+    queryFn: () => api.posts.getByCategory(categorySlug, page, search),
     enabled: !!categorySlug,
   });
 }
@@ -75,7 +75,7 @@ export function usePage(slug: string) {
 //   });
 // }
 
-export function useDocuments(params?: { page?: number; doc_type?: string; search?: string }) {
+export function useDocuments(params?: { page?: number; doc_type?: string; doc_source?: string; search?: string }) {
   return useQuery({
     queryKey: ['documents', params],
     queryFn: async () => {
@@ -130,7 +130,7 @@ export function useDepartmentStaff(id: number) {
 }
 
 // Staff hooks
-export function useStaff(params?: { department?: number; search?: string }) {
+export function useStaff(params?: { department?: number; position?: string; search?: string }) {
   return useQuery({
     queryKey: ['staff', params],
     queryFn: () => api.staff.getAll(params),

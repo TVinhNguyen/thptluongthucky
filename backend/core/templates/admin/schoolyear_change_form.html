@@ -1,0 +1,260 @@
+{% extends "admin/change_form.html" %}
+{% load i18n static %}
+
+{% block form_top %}
+    {{ block.super }}
+    <script>
+        // Thêm enctype vào form để hỗ trợ file upload
+        document.addEventListener('DOMContentLoaded', function() {
+            var forms = document.querySelectorAll('form');
+            forms.forEach(function(form) {
+                if (form.method.toLowerCase() === 'post') {
+                    form.setAttribute('enctype', 'multipart/form-data');
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block after_related_objects %}
+    {{ block.super }}
+    
+    {% if original %}
+    
+    <style>
+        .import-module {
+            background: rgb(237, 245, 255);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 20px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .import-module h2 {
+            background: linear-gradient(to right, #417690, #4a89a8);
+            color: #fff;
+            padding: 12px 15px;
+            margin: 0;
+            border-radius: 4px 4px 0 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .import-module .form-content {
+            padding: 20px;
+            background: rgb(237, 245, 255);
+        }
+
+        .import-module .form-row {
+            margin-bottom: 15px;
+        }
+
+        .import-module label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .import-module input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: rgb(237, 245, 255);
+            font-size: 13px;
+        }
+
+        .import-module .help {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .warning-notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-left: 4px solid #ff9800;
+            padding: 12px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .warning-notice strong {
+            color: #856404;
+        }
+
+        .warning-notice span {
+            color: #664d03;
+        }
+
+        .format-details {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+            background: rgb(237, 245, 255);
+        }
+
+        .format-details summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #417690;
+            padding: 5px;
+            user-select: none;
+        }
+
+        .format-details summary:hover {
+            color: #2c5777;
+        }
+
+        .format-details[open] summary {
+            margin-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 8px;
+        }
+
+        .format-details .format-content {
+            padding: 10px 15px;
+            background: rgb(237, 245, 255);
+            border-radius: 3px;
+        }
+
+        .format-details ul {
+            margin: 0;
+            padding-left: 25px;
+            color: #555;
+        }
+
+        .format-details li {
+            margin: 6px 0;
+            line-height: 1.5;
+        }
+
+        .btn-submit-import {
+            background: linear-gradient(to bottom, #417690, #35617c);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-submit-import:hover:not(:disabled) {
+            background: linear-gradient(to bottom, #35617c, #2c5268);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .btn-submit-import:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .btn-submit-import:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .import-module {
+                background: #1a1a1a;
+                border-color: #3a3a3a;
+            }
+
+            .import-module .form-content {
+                background: #1a1a1a;
+            }
+
+            .import-module label {
+                color: #e0e0e0;
+            }
+
+            .import-module input[type="file"] {
+                background: #2a2a2a;
+                border-color: #4a4a4a;
+                color: #e0e0e0;
+            }
+
+            .import-module .help {
+                color: #999;
+            }
+
+            .warning-notice {
+                background: #3d3516;
+                border-color: #665500;
+            }
+
+            .warning-notice strong,
+            .warning-notice span {
+                color: #ffc107;
+            }
+
+            .format-details {
+                background: #252525;
+                border-color: #3a3a3a;
+            }
+
+            .format-details .format-content {
+                background: #1f1f1f;
+            }
+
+            .format-details ul {
+                color: #bbb;
+            }
+        }
+    </style>
+
+    <div class="import-module">
+        <h2>📥 Import Thời Khóa Biểu từ Excel</h2>
+        
+        <div class="form-content">
+            <div class="import-fields">
+                <div class="form-row">
+                    <label for="excel_file" class="required">Chọn file Excel:</label>
+                    <input type="file" 
+                           name="excel_file" 
+                           id="excel_file" 
+                           accept=".xlsx,.xls"
+                           onchange="document.getElementById('submit-import-btn').disabled = false;">
+                    <p class="help">Chấp nhận file .xlsx hoặc .xls</p>
+                </div>
+
+                <div class="warning-notice">
+                    <strong>⚠ Lưu ý:</strong> 
+                    <span>Tất cả TKB của năm học <strong>{{ original.name }}</strong> sẽ bị xóa và thay bằng dữ liệu mới từ file Excel.</span>
+                </div>
+
+                <details class="format-details">
+                    <summary>📋 Xem yêu cầu format file Excel</summary>
+                    <div class="format-content">
+                        <ul>
+                            <li>File có 2 sheet trở lên (sheet đầu: TKB sáng, sheet thứ 2: TKB chiều)</li>
+                            <li>Dòng 5: Chứa tên các lớp (ví dụ: 12A1, 10/1, 11C3)</li>
+                            <li>Dòng 6-35: Dữ liệu thời khóa biểu</li>
+                            <li>Cột A: Thứ (Thứ 2 - CN), Cột B: Tiết (1-5), Cột C trở đi: Các lớp</li>
+                            <li>Format ô: "MÔN - GV" hoặc "MÔN - GV - PHÒNG"</li>
+                            <li>Buổi chiều: Tiết học sẽ được đánh số từ 6-10 tự động</li>
+                        </ul>
+                    </div>
+                </details>
+
+                <div class="form-row">
+                    <button type="submit" 
+                            id="submit-import-btn" 
+                            name="_import_timetable" 
+                            value="1"
+                            class="btn-submit-import" 
+                            disabled>
+                        🔄 Import Thời Khóa Biểu
+                    </button>
+                    <p class="help">Chọn file Excel trước khi import</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+{% endblock %}

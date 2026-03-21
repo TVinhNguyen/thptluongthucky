@@ -188,9 +188,37 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Build with Docker Compose
+    - name: Pull base images
       run: |
-        docker compose -f docker-compose.yml build
+        docker pull node:20-alpine || true
+        docker pull python:3.12-slim || true
+        docker pull postgres:15-alpine || true
+
+    - name: Build with Docker Compose (with retry)
+      run: |
+        #!/bin/bash
+        set -e
+        max_attempts=3
+        attempt=1
+        
+        while [ $attempt -le $max_attempts ]; do
+          echo "Build attempt $attempt of $max_attempts..."
+          if docker compose -f docker-compose.yml build; then
+            echo "Build successful!"
+            break
+          else
+            if [ $attempt -lt $max_attempts ]; then
+              echo "Build failed, waiting 60 seconds before retry..."
+              sleep 60
+            fi
+            attempt=$((attempt + 1))
+          fi
+        done
+        
+        if [ $attempt -gt $max_attempts ]; then
+          echo "Build failed after $max_attempts attempts"
+          exit 1
+        fi
 
     - name: Start services with Docker Compose
       run: |

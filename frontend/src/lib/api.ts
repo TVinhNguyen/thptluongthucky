@@ -46,12 +46,18 @@ export interface Document {
   code: string;
   title: string;
   doc_type: 'CONG_VAN' | 'QUYET_DINH' | 'TKB' | 'BIEU_MAU';
+  doc_type_display: string;
   file: string;
+  file_url: string;
+  file_name: string;
   file_size: number;
+  formatted_file_size: string;
+  description?: string;
   published_date: string;
   signer: string;
   download_count: number;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Department {
@@ -181,9 +187,10 @@ export const api = {
     },
     getBySlug: (slug: string) => fetchAPI<Post>(`/posts/${slug}/`),
     getFeatured: () => fetchAPI<Post[]>('/posts/featured/'),
-    getByCategory: (categorySlug: string, page?: number) => {
+    getByCategory: (categorySlug: string, page?: number, search?: string | null) => {
       const params = new URLSearchParams({ slug: categorySlug });
       if (page) params.set('page', page.toString());
+      if (search) params.set('search', search);
       return fetchAPI<PaginatedResponse<Post>>(`/posts/by_category/?${params}`);
     },
   },
@@ -196,10 +203,11 @@ export const api = {
 
   // Documents
   documents: {
-    getAll: (params?: { page?: number; doc_type?: string; search?: string }) => {
+    getAll: (params?: { page?: number; doc_type?: string; doc_source?: string; search?: string }) => {
       const searchParams = new URLSearchParams();
       if (params?.page) searchParams.set('page', params.page.toString());
       if (params?.doc_type) searchParams.set('doc_type', params.doc_type);
+      if (params?.doc_source) searchParams.set('doc_source', params.doc_source);
       if (params?.search) searchParams.set('search', params.search);
       const query = searchParams.toString();
       return fetchAPI<PaginatedResponse<Document>>(`/documents/${query ? `?${query}` : ''}`);
@@ -217,9 +225,10 @@ export const api = {
 
   // Staff
   staff: {
-    getAll: (params?: { department?: number; search?: string }) => {
+    getAll: (params?: { department?: number; position?: string; search?: string }) => {
       const searchParams = new URLSearchParams();
       if (params?.department) searchParams.set('department', params.department.toString());
+      if (params?.position) searchParams.set('position', params.position);
       if (params?.search) searchParams.set('search', params.search);
       const query = searchParams.toString();
       return fetchAPI<Staff[]>(`/staff/${query ? `?${query}` : ''}`);

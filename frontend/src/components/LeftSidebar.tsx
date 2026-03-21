@@ -12,23 +12,23 @@ const LeftSidebar = () => {
         { label: "Đoàn Thanh niên", href: "/co-cau-to-chuc#doan-thanh-nien" },
         { label: "Tổ Văn Phòng", href: "/can-bo-giao-vien?filter=van-phong" },
         { label: "Tổ Chuyên môn", href: "/can-bo-giao-vien?filter=chuyen-mon" },
-        { label: "Ban thường trực Hội cha mẹ học sinh", href: "/co-cau-to-chuc#hoi-cha-me" },
+        { label: "Ban thường trực Hội cha mẹ học sinh", href: "/can-bo-giao-vien?filter=hoi-cha-me-hoc-sinh" },
       ],
     },
     {
       title: "Tin tức sự kiện",
       items: [
-        { label: "Thời khóa biểu", href: "/chuyen-muc/thoi-khoa-bieu" },
-        { label: "Thi - Kiểm tra", href: "/chuyen-muc/thi-kiem-tra" },
+        { label: "Thời khóa biểu", href: "/thoi-khoa-bieu" },
+        { label: "Thi - Kiểm tra", href: "/chuyen-muc/thi-tuyen-sinh?search=thi|kiểm tra" },
       ],
     },
     {
       title: "Văn Bản Điều Hành",
       items: [
-        { label: "Văn bản Sở GD&ĐT", href: "/thu-vien-van-ban?type=so-gddt" },
-        { label: "Văn bản Trường", href: "/thu-vien-van-ban?type=truong" },
-        { label: "Văn bản HĐND-UBND xã", href: "/thu-vien-van-ban?type=hdnd-ubnd" },
-        { label: "Thông báo, phổ biến", href: "/thu-vien-van-ban?type=thong-bao" },
+        { label: "Văn bản Sở GD&ĐT", href: "/thu-vien-van-ban?source=SO_GDDT" },
+        { label: "Văn bản Trường", href: "/thu-vien-van-ban?source=TRUONG" },
+        { label: "Văn bản HĐND-UBND xã", href: "/thu-vien-van-ban?source=HDND_UBND" },
+        { label: "Thông báo, phổ biến", href: "/thu-vien-van-ban?source=THONG_BAO" },
       ],
     },
     {

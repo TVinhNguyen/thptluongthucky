@@ -2,6 +2,7 @@
 Django==5.2.* # Dùng bản 5.2.x mới nhất (LTS)
 psycopg2-binary            # Driver PostgreSQL
 django-unfold              # Modern admin interface
+gunicorn
 
 # --- API (Cho Vue.js) ---
 djangorestframework>=3.15  # Bản mới hỗ trợ Django 5
@@ -23,3 +24,7 @@ django-ckeditor-5
 # --- Media storage (Cloudinary) ---
 cloudinary
 django-cloudinary-storage
+
+# --- Excel Import/Export ---
+pandas
+openpyxl

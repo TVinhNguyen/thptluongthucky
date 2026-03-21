@@ -48,6 +48,14 @@ const Navigation = () => {
           { label: "Cán bộ giáo viên", href: "/can-bo-giao-vien" },
         ],
       },
+      {
+        label: "Văn bản - Công văn",
+        dropdownItems: [
+          { label: "Thư viện văn bản", href: "/thu-vien-van-ban" },
+          { label: "Công văn", href: "/thu-vien-van-ban/cong-van" },
+          { label: "Quyết định", href: "/thu-vien-van-ban/quyet-dinh" },
+        ],
+      },
     ];
 
     // Get only parent categories (parent === null)

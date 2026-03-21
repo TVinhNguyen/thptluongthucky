@@ -1,21 +1,31 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
+from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import F
+from django.utils.translation import gettext_lazy as _
+import logging
 
 from .models import (
     Category, Post, Page, Document, Department, Staff,
-    PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage
+    PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage,
+    SchoolYear, SchoolClass, TimetableEntry
 )
 from .serializers import (
     CategorySerializer, PostListSerializer, PostDetailSerializer,
-    PageSerializer, DocumentSerializer, DepartmentSerializer, StaffSerializer,
+    PageSerializer, DocumentSerializer, DocumentCreateUpdateSerializer,
+    DepartmentSerializer, StaffSerializer,
     PhotoAlbumListSerializer, PhotoAlbumDetailSerializer, PhotoSerializer,
-    VideoSerializer, BannerSerializer, ExternalLinkSerializer, ContactMessageSerializer
+    VideoSerializer, BannerSerializer, ExternalLinkSerializer, ContactMessageSerializer,
+    SchoolYearSerializer, SchoolClassSerializer, TimetableEntrySerializer,
+    TimetableEntryListSerializer, TimetableImportSerializer
 )
+from .utils import import_timetable_from_excel
+
+logger = logging.getLogger(__name__)
 
 class PostPagination(PageNumberPagination):
     page_size = 10  # bao nhiêu bài / 1 page
@@ -81,10 +91,13 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'], url_path='by_category')
     def by_category(self, request):
         """
-        Lấy bài viết theo slug danh mục.
+        Lấy bài viết theo slug danh mục (hỗ trợ cả category cha và con).
+        Support search query param để filter theo keyword.
         Nếu slug = 'tin-moi-nhat' thì trả về tin mới nhất (không theo danh mục).
         """
         category_slug = request.query_params.get('slug')
+        search_query = request.query_params.get('search')
+        
         if not category_slug:
             return Response(
                 {'error': 'Vui lòng cung cấp slug danh mục'},
@@ -98,21 +111,33 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
                 .filter(published_at__isnull=False)
                 .order_by('-published_at')
             )
-            page = self.paginate_queryset(queryset)
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        # Các danh mục bình thường
-        try:
-            category = Category.objects.get(slug=category_slug)
-        except Category.DoesNotExist:
-            return Response(
-                {'error': 'Không tìm thấy danh mục'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        posts = self.get_queryset().filter(category=category)
-        page = self.paginate_queryset(posts)
+        else:
+            # Các danh mục bình thường (hỗ trợ cả parent và children)
+            try:
+                category = Category.objects.get(slug=category_slug)
+            except Category.DoesNotExist:
+                return Response(
+                    {'error': 'Không tìm thấy danh mục'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            queryset = self.get_queryset().filter(category=category)
+        
+        # Apply search filter if provided
+        if search_query:
+            from django.db.models import Q
+            keywords = search_query.split('|')
+            q_objects = Q()
+            for keyword in keywords:
+                keyword = keyword.strip()
+                if keyword:
+                    q_objects |= (
+                        Q(title__icontains=keyword) |
+                        Q(summary__icontains=keyword) |
+                        Q(content__icontains=keyword)
+                    )
+            queryset = queryset.filter(q_objects)
+        
+        page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
@@ -128,35 +153,65 @@ class PageViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
 
-class DocumentViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    API endpoint để xem văn bản
-    - list: Danh sách văn bản
-    - retrieve: Chi tiết văn bản
-    - download: Tải văn bản (tăng download_count)
-    """
+class DocumentViewSet(viewsets.ModelViewSet):
+    """Document API - Full CRUD with file upload"""
+    
     queryset = Document.objects.all().order_by('-published_date', '-created_at')
-    serializer_class = DocumentSerializer
-    permission_classes = [AllowAny]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['doc_type']
-    search_fields = ['title', 'code', 'signer']
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['doc_type', 'doc_source']
+    search_fields = ['title', 'code', 'signer', 'description']
+    ordering_fields = ['published_date', 'created_at', 'download_count']
+    
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return DocumentCreateUpdateSerializer
+        return DocumentSerializer
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve', 'download']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
     
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
-        return Response({
-            "results": serializer.data
-        })
+        return Response({"count": queryset.count(), "results": serializer.data})
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
         
-    @action(detail=True, methods=['post'])
+        read_serializer = DocumentSerializer(serializer.instance)
+        return Response(read_serializer.data, status=status.HTTP_201_CREATED)
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        read_serializer = DocumentSerializer(serializer.instance)
+        return Response(read_serializer.data)
+    
+    @action(detail=True, methods=['post'], permission_classes=[AllowAny])
     def download(self, request, pk=None):
-        """Tăng số lượt tải khi người dùng download"""
+        """Download + increment counter"""
         document = self.get_object()
         Document.objects.filter(pk=document.pk).update(download_count=F('download_count') + 1)
         document.refresh_from_db()
+        
         serializer = self.get_serializer(document)
         return Response(serializer.data)
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'detail': _('Document deleted')}, status=status.HTTP_204_NO_CONTENT)
 
 
 class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):
@@ -272,3 +327,152 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
              'data': serializer.data},
             status=status.HTTP_201_CREATED
         )
+
+
+# ============= TIMETABLE VIEWS =============
+
+class SchoolYearViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint cho năm học
+    - list: Danh sách năm học
+    - retrieve: Chi tiết năm học
+    - create/update/delete: Quản lý năm học (cần quyền admin)
+    """
+    queryset = SchoolYear.objects.all()
+    serializer_class = SchoolYearSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """Lấy năm học đang active"""
+        try:
+            active_year = SchoolYear.objects.get(is_active=True)
+            serializer = self.get_serializer(active_year)
+            return Response(serializer.data)
+        except SchoolYear.DoesNotExist:
+            return Response(
+                {'error': 'Không có năm học nào đang active'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class SchoolClassViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint cho lớp học
+    - list: Danh sách lớp học
+    - retrieve: Chi tiết lớp học
+    - filter by grade: ?grade=10
+    """
+    queryset = SchoolClass.objects.all()
+    serializer_class = SchoolClassSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['grade']
+    ordering_fields = ['grade', 'name']
+    ordering = ['grade', 'name']
+
+
+class TimetableEntryViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint cho thời khóa biểu
+    - list: Danh sách tiết học
+    - retrieve: Chi tiết tiết học
+    - filter: ?school_year=1&school_class=2&day_of_week=2
+    """
+    queryset = TimetableEntry.objects.select_related(
+        'school_year', 'school_class'
+    ).all()
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['school_year', 'school_class', 'day_of_week', 'period']
+    ordering_fields = ['day_of_week', 'period']
+    ordering = ['day_of_week', 'period']
+    
+    def get_serializer_class(self):
+        """Dùng serializer khác cho list và detail"""
+        if self.action == 'list':
+            return TimetableEntryListSerializer
+        return TimetableEntrySerializer
+    
+    @action(detail=False, methods=['get'])
+    def by_class(self, request):
+        """
+        Lấy TKB theo lớp
+        Query params: ?class_id=1&school_year_id=1
+        """
+        class_id = request.query_params.get('class_id')
+        school_year_id = request.query_params.get('school_year_id')
+        
+        if not class_id:
+            return Response(
+                {'error': 'Thiếu tham số class_id'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        queryset = self.get_queryset().filter(school_class_id=class_id)
+        
+        if school_year_id:
+            queryset = queryset.filter(school_year_id=school_year_id)
+        else:
+            # Lấy năm học active
+            try:
+                active_year = SchoolYear.objects.get(is_active=True)
+                queryset = queryset.filter(school_year=active_year)
+            except SchoolYear.DoesNotExist:
+                pass
+        
+        serializer = TimetableEntryListSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class TimetableImportView(APIView):
+    """
+    API endpoint để import TKB từ file Excel
+    POST: Upload file Excel + school_year_id
+    Hỗ trợ:
+    - import_both_sessions=true: Import cả sáng và chiều (mặc định)
+    - import_both_sessions=false + sheet_name: Import 1 sheet cụ thể
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        """Import TKB từ file Excel"""
+        serializer = TimetableImportSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response(
+                {'error': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        file = serializer.validated_data['file']
+        school_year = serializer.validated_data['school_year']
+        import_both_sessions = serializer.validated_data.get('import_both_sessions', True)
+        sheet_name = serializer.validated_data.get('sheet_name', None)
+        
+        # Gọi hàm import
+        success, message = import_timetable_from_excel(
+            file=file,
+            school_year_id=school_year.id,
+            sheet_name=sheet_name,
+            import_both_sessions=import_both_sessions
+        )
+        
+        if success:
+            return Response(
+                {
+                    'success': True,
+                    'message': message,
+                    'school_year': SchoolYearSerializer(school_year).data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(
+                {
+                    'success': False,
+                    'error': message
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
