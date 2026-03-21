@@ -142,6 +142,24 @@ export interface ContactMessage {
   message: string;
 }
 
+export interface SiteSettings {
+  quote_title: string;
+  quote_content: string;
+  quote_author: string;
+  sidebar_intro_items: Array<{
+    label: string;
+    href: string;
+  }>;
+  sidebar_documents_items: Array<{
+    label: string;
+    href: string;
+  }>;
+  sidebar_news_items: Array<{
+    label: string;
+    href: string;
+  }>;
+}
+
 export interface PaginatedResponse<T> {
   count: number;
   next: string | null;
@@ -225,11 +243,12 @@ export const api = {
 
   // Staff
   staff: {
-    getAll: (params?: { department?: number; position?: string; search?: string }) => {
+    getAll: (params?: { department?: number; position?: string; search?: string; filter?: string }) => {
       const searchParams = new URLSearchParams();
       if (params?.department) searchParams.set('department', params.department.toString());
       if (params?.position) searchParams.set('position', params.position);
       if (params?.search) searchParams.set('search', params.search);
+      if (params?.filter) searchParams.set('filter', params.filter);
       const query = searchParams.toString();
       return fetchAPI<Staff[]>(`/staff/${query ? `?${query}` : ''}`);
     },
@@ -257,6 +276,11 @@ export const api = {
   // External Links
   externalLinks: {
     getAll: () => fetchAPI<ExternalLink[]>('/external-links/'),
+  },
+
+  // Site Settings
+  siteSettings: {
+    get: () => fetchAPI<SiteSettings>('/site-settings/'),
   },
 
   // Contact

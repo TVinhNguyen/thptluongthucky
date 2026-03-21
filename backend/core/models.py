@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import User
 from django_ckeditor_5.fields import CKEditor5Field
@@ -178,6 +179,28 @@ class Department(models.Model):
         return self.name
 
 
+class StaffFilterTag(models.Model):
+    """Cấu hình chức danh hiển thị linh động cho trang nhân sự/sidebar."""
+
+    name = models.CharField(max_length=200, verbose_name="Tiêu đề")
+    slug = models.SlugField(max_length=200, unique=True, blank=True, verbose_name="Slug")
+    sort_order = models.IntegerField(default=0, verbose_name="Thứ tự")
+    is_active = models.BooleanField(default=True, verbose_name="Hiển thị")
+
+    class Meta:
+        verbose_name = "Chức danh hiển thị"
+        verbose_name_plural = "Quản lý chức danh"
+        ordering = ["sort_order", "name"]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify_vietnamese(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
 class Staff(models.Model):
     """Giáo viên & Nhân sự"""
     full_name = models.CharField(max_length=200, verbose_name="Họ tên")
@@ -188,6 +211,12 @@ class Staff(models.Model):
     email = models.EmailField(blank=True, verbose_name="Email")
     phone = models.CharField(max_length=20, blank=True, verbose_name="Điện thoại")
     bio = models.TextField(blank=True, verbose_name="Tiểu sử")
+    filter_tags = models.ManyToManyField(
+        StaffFilterTag,
+        blank=True,
+        related_name="staff_members",
+        verbose_name="Chức danh hiển thị",
+    )
     sort_order = models.IntegerField(default=0, verbose_name="Thứ tự")
     is_active = models.BooleanField(default=True, verbose_name="Đang làm việc")
     
@@ -375,6 +404,187 @@ class ContactMessage(models.Model):
     
     def __str__(self):
         return f"{self.full_name} - {self.subject or 'Liên hệ'}"
+
+
+class SiteSetting(models.Model):
+    """Global UI settings editable in Django admin."""
+
+    sidebar_documents_title = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name="Sidebar documents title",
+        help_text="Override the left sidebar 'Documents' section title (optional).",
+    )
+    quote_title = models.CharField(
+        max_length=255,
+        blank=True,
+        default="Loi Chu tich Ho Chi Minh",
+        verbose_name="Tieu de trich dan",
+    )
+    quote_content = models.TextField(
+        blank=True,
+        default='"Vi loi ich muoi nam phai trong cay, vi loi ich tram nam phai trong nguoi"',
+        verbose_name="Noi dung trich dan",
+    )
+    quote_author = models.CharField(
+        max_length=255,
+        blank=True,
+        default="Ho Chi Minh",
+        verbose_name="Tac gia trich dan",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Site setting"
+        verbose_name_plural = "Site settings"
+
+    def __str__(self):
+        return "Site settings"
+
+
+class SidebarDocumentItem(models.Model):
+    site_setting = models.ForeignKey(
+        SiteSetting,
+        on_delete=models.CASCADE,
+        related_name="document_items",
+        verbose_name="Site setting",
+    )
+    label = models.CharField(max_length=255, verbose_name="Label")
+    document_source = models.CharField(
+        max_length=50,
+        choices=Document.DOC_SOURCE_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="Document source",
+    )
+    sort_order = models.IntegerField(default=0, verbose_name="Sort order")
+    is_active = models.BooleanField(default=True, verbose_name="Active")
+
+    class Meta:
+        verbose_name = "Sidebar document item"
+        verbose_name_plural = "Sidebar document items"
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return self.label
+
+    @property
+    def href(self):
+        if not self.document_source:
+            return "/thu-vien-van-ban"
+        return f"/thu-vien-van-ban?source={self.document_source}"
+
+
+class SidebarNewsItem(models.Model):
+    site_setting = models.ForeignKey(
+        SiteSetting,
+        on_delete=models.CASCADE,
+        related_name="news_items",
+        verbose_name="Site setting",
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sidebar_news_items",
+        verbose_name="Category",
+    )
+    sort_order = models.IntegerField(default=0, verbose_name="Sort order")
+    is_active = models.BooleanField(default=True, verbose_name="Active")
+
+    class Meta:
+        verbose_name = "Sidebar news item"
+        verbose_name_plural = "Sidebar news items"
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return self.label
+
+    @property
+    def label(self):
+        return self.category.name if self.category else "Unknown category"
+
+    @property
+    def href(self):
+        if not self.category:
+            return "/"
+        return f"/chuyen-muc/{self.category.slug}"
+
+
+class SidebarIntroItem(models.Model):
+    LINK_TYPE_STAFF_ALL = "STAFF_ALL"
+    LINK_TYPE_STAFF_FILTER = "STAFF_FILTER"
+    LINK_TYPE_CUSTOM = "CUSTOM"
+    LINK_TYPE_CHOICES = [
+        (LINK_TYPE_STAFF_ALL, "Danh sach nhan su"),
+        (LINK_TYPE_STAFF_FILTER, "Nhan su theo chuc danh"),
+        (LINK_TYPE_CUSTOM, "Duong dan tuy chinh"),
+    ]
+
+    site_setting = models.ForeignKey(
+        SiteSetting,
+        on_delete=models.CASCADE,
+        related_name="intro_items",
+        verbose_name="Site setting",
+    )
+    label = models.CharField(max_length=255, verbose_name="Label")
+    link_type = models.CharField(
+        max_length=20,
+        choices=LINK_TYPE_CHOICES,
+        default=LINK_TYPE_STAFF_FILTER,
+        verbose_name="Link type",
+    )
+    staff_filter_tag = models.ForeignKey(
+        StaffFilterTag,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sidebar_intro_items",
+        verbose_name="Staff filter tag",
+    )
+    custom_path = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name="Custom path",
+        help_text="Internal path, vd: /co-cau-to-chuc",
+    )
+    anchor = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        verbose_name="Anchor",
+        help_text="Optional, vd: #chi-bo-dang",
+    )
+    sort_order = models.IntegerField(default=0, verbose_name="Sort order")
+    is_active = models.BooleanField(default=True, verbose_name="Active")
+
+    class Meta:
+        verbose_name = "Sidebar intro item"
+        verbose_name_plural = "Sidebar intro items"
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return self.label
+
+    def clean(self):
+        if self.link_type == self.LINK_TYPE_STAFF_FILTER and not self.staff_filter_tag:
+            raise ValidationError({"staff_filter_tag": "Chon chuc danh khi dung kieu Nhan su theo chuc danh."})
+        if self.link_type == self.LINK_TYPE_CUSTOM and not self.custom_path:
+            raise ValidationError({"custom_path": "Nhap duong dan khi dung kieu Duong dan tuy chinh."})
+
+    @property
+    def href(self):
+        if self.link_type == self.LINK_TYPE_STAFF_ALL:
+            return "/can-bo-giao-vien"
+        if self.link_type == self.LINK_TYPE_STAFF_FILTER and self.staff_filter_tag:
+            return f"/can-bo-giao-vien?filter={self.staff_filter_tag.slug}"
+        if self.link_type == self.LINK_TYPE_CUSTOM and self.custom_path:
+            return f"{self.custom_path}{self.anchor or ''}"
+        return "/"
 
 
 # ============= TIMETABLE MODELS =============

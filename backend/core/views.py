@@ -12,7 +12,7 @@ import logging
 from .models import (
     Category, Post, Page, Document, Department, Staff,
     PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage,
-    SchoolYear, SchoolClass, TimetableEntry
+    SiteSetting, SchoolYear, SchoolClass, TimetableEntry
 )
 from .serializers import (
     CategorySerializer, PostListSerializer, PostDetailSerializer,
@@ -239,12 +239,26 @@ class StaffViewSet(viewsets.ReadOnlyModelViewSet):
     - list: Danh sách nhân sự
     - retrieve: Chi tiết nhân sự
     """
-    queryset = Staff.objects.filter(is_active=True).order_by('sort_order', 'full_name')
+    queryset = Staff.objects.filter(is_active=True).prefetch_related('filter_tags').order_by('sort_order', 'full_name')
     serializer_class = StaffSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['department', 'position']
+    filterset_fields = ['department']
     search_fields = ['full_name', 'email', 'phone']
+
+    def get_queryset(self):
+        """Support filtering by position and dynamic sidebar filter slug."""
+        queryset = super().get_queryset()
+        position = self.request.query_params.get('position')
+        filter_slug = self.request.query_params.get('filter') or self.request.query_params.get('group')
+        if position:
+            queryset = queryset.filter(position__iexact=position)
+        if filter_slug:
+            queryset = queryset.filter(
+                filter_tags__slug=filter_slug,
+                filter_tags__is_active=True
+            ).distinct()
+        return queryset
 
 
 class PhotoAlbumViewSet(viewsets.ReadOnlyModelViewSet):
@@ -326,6 +340,52 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
             {'message': 'Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất.', 
              'data': serializer.data},
             status=status.HTTP_201_CREATED
+        )
+
+
+class SiteSettingView(APIView):
+    """Public endpoint for frontend UI settings."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        setting = SiteSetting.objects.order_by('-updated_at').first()
+        document_items = []
+        news_items = []
+        intro_items = []
+
+        if setting:
+            document_items = [
+                {
+                    "label": item.label,
+                    "href": item.href,
+                }
+                for item in setting.document_items.filter(is_active=True).order_by('sort_order', 'id')
+            ]
+            news_items = [
+                {
+                    "label": item.label,
+                    "href": item.href,
+                }
+                for item in setting.news_items.filter(is_active=True).order_by('sort_order', 'id')
+            ]
+            intro_items = [
+                {
+                    "label": item.label,
+                    "href": item.href,
+                }
+                for item in setting.intro_items.filter(is_active=True).order_by('sort_order', 'id')
+            ]
+
+        return Response(
+            {
+                "sidebar_documents_items": document_items,
+                "sidebar_news_items": news_items,
+                "sidebar_intro_items": intro_items,
+                "quote_title": setting.quote_title if setting else "",
+                "quote_content": setting.quote_content if setting else "",
+                "quote_author": setting.quote_author if setting else "",
+            }
         )
 
 
