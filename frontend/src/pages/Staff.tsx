@@ -30,12 +30,14 @@ const normalizeSlug = (text: string) =>
 const Staff = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  const [sidebarFilter, setSidebarFilter] = useState<string | undefined>(undefined);
   const location = useLocation();
   
   const { data: departments, isLoading: loadingDepartments } = useDepartments();
   const { data: staffList, isLoading: loadingStaff } = useStaff({
     department: selectedDepartment !== "all" ? parseInt(selectedDepartment) : undefined,
     search: searchTerm || undefined,
+    filter: sidebarFilter,
   });
 
   const filterParam = useMemo(() => {
@@ -44,7 +46,11 @@ const Staff = () => {
   }, [location.search]);
 
   useEffect(() => {
-    if (!filterParam || !departments?.length) return;
+    if (!filterParam) {
+      setSidebarFilter(undefined);
+      return;
+    }
+    if (!departments?.length) return;
 
     const matched = departments.find(
       (dept) => normalizeSlug(dept.name) === normalizeSlug(filterParam)
@@ -52,10 +58,10 @@ const Staff = () => {
 
     if (matched) {
       setSelectedDepartment(matched.id.toString());
-      // console.log(setSelectedDepartment(matched.id.toString()));
+      setSidebarFilter(undefined);
     } else {
-      // fallback: apply search term to narrow list if no department matched
-      setSearchTerm(filterParam.replace(/-/g, " "));
+      setSelectedDepartment("all");
+      setSidebarFilter(normalizeSlug(filterParam));
     }
   }, [filterParam, departments]);
 

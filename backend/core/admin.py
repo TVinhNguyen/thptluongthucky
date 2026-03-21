@@ -7,10 +7,9 @@ from django.urls import path
 from django.urls import reverse
 from unfold.admin import ModelAdmin
 from .models import (
-    Category, Post, Page, Document, Department, Staff,
-    StaffGroup,
+    Category, Post, Page, Document, Department, Staff, StaffFilterTag,
     PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage,
-    SiteSetting, SidebarDocumentItem, SidebarNewsItem, SchoolYear, SchoolClass, TimetableEntry
+    SiteSetting, SidebarDocumentItem, SidebarNewsItem, SidebarIntroItem, SchoolYear, SchoolClass, TimetableEntry
 )
 from .utils import import_timetable_from_excel
 
@@ -140,8 +139,8 @@ class DepartmentAdmin(ModelAdmin):
     ordering = ['sort_order', 'name']
 
 
-@admin.register(StaffGroup)
-class StaffGroupAdmin(ModelAdmin):
+@admin.register(StaffFilterTag)
+class StaffFilterTagAdmin(ModelAdmin):
     list_display = ['name', 'slug', 'sort_order', 'is_active']
     list_filter = ['is_active']
     search_fields = ['name', 'slug']
@@ -152,10 +151,10 @@ class StaffGroupAdmin(ModelAdmin):
 @admin.register(Staff)
 class StaffAdmin(ModelAdmin):
     list_display = ['full_name', 'position', 'department', 'email', 'phone', 'is_active']
-    list_filter = ['is_active', 'department', 'position', 'sidebar_groups']
+    list_filter = ['is_active', 'department', 'position', 'filter_tags']
     search_fields = ['full_name', 'email', 'phone']
     ordering = ['sort_order', 'full_name']
-    filter_horizontal = ['sidebar_groups']
+    filter_horizontal = ['filter_tags']
 
 
 class PhotoInline(admin.TabularInline):
@@ -281,12 +280,30 @@ class SidebarNewsItemInline(admin.TabularInline):
         return formset
 
 
+class SidebarIntroItemInline(admin.TabularInline):
+    model = SidebarIntroItem
+    extra = 1
+    fields = ['label', 'link_type', 'staff_filter_tag', 'custom_path', 'anchor', 'sort_order', 'is_active']
+    ordering = ['sort_order', 'id']
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        for field_name in ('staff_filter_tag',):
+            field = formset.form.base_fields.get(field_name)
+            if field and hasattr(field.widget, 'can_add_related'):
+                field.widget.can_add_related = False
+                field.widget.can_change_related = False
+                field.widget.can_delete_related = False
+                field.widget.can_view_related = True
+        return formset
+
+
 @admin.register(SiteSetting)
 class SiteSettingAdmin(ModelAdmin):
     list_display = ['updated_at']
     readonly_fields = ['created_at', 'updated_at']
     ordering = ['-updated_at']
-    inlines = [SidebarDocumentItemInline, SidebarNewsItemInline]
+    inlines = [SidebarDocumentItemInline, SidebarNewsItemInline, SidebarIntroItemInline]
 
     fieldsets = (
         ('Metadata', {

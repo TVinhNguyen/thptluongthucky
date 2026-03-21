@@ -239,7 +239,7 @@ class StaffViewSet(viewsets.ReadOnlyModelViewSet):
     - list: Danh sách nhân sự
     - retrieve: Chi tiết nhân sự
     """
-    queryset = Staff.objects.filter(is_active=True).order_by('sort_order', 'full_name')
+    queryset = Staff.objects.filter(is_active=True).prefetch_related('filter_tags').order_by('sort_order', 'full_name')
     serializer_class = StaffSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -247,11 +247,17 @@ class StaffViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ['full_name', 'email', 'phone']
 
     def get_queryset(self):
-        """Support case-insensitive position filtering via ?position=..."""
+        """Support filtering by position and dynamic sidebar filter slug."""
         queryset = super().get_queryset()
         position = self.request.query_params.get('position')
+        filter_slug = self.request.query_params.get('filter') or self.request.query_params.get('group')
         if position:
             queryset = queryset.filter(position__iexact=position)
+        if filter_slug:
+            queryset = queryset.filter(
+                filter_tags__slug=filter_slug,
+                filter_tags__is_active=True
+            ).distinct()
         return queryset
 
 
@@ -346,6 +352,7 @@ class SiteSettingView(APIView):
         setting = SiteSetting.objects.order_by('-updated_at').first()
         document_items = []
         news_items = []
+        intro_items = []
 
         if setting:
             document_items = [
@@ -362,11 +369,19 @@ class SiteSettingView(APIView):
                 }
                 for item in setting.news_items.filter(is_active=True).order_by('sort_order', 'id')
             ]
+            intro_items = [
+                {
+                    "label": item.label,
+                    "href": item.href,
+                }
+                for item in setting.intro_items.filter(is_active=True).order_by('sort_order', 'id')
+            ]
 
         return Response(
             {
                 "sidebar_documents_items": document_items,
                 "sidebar_news_items": news_items,
+                "sidebar_intro_items": intro_items,
             }
         )
 
