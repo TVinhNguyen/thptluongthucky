@@ -6,7 +6,10 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import F
+from django.conf import settings
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.cache import cache_page
 import logging
 
 from .models import (
@@ -32,6 +35,8 @@ class PostPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 100
 
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='list')
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='retrieve')
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint để xem danh mục
@@ -47,6 +52,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
         """Chỉ lấy danh mục cha (parent=None)"""
         return Category.objects.filter(parent=None).order_by('sort_order', 'name')
 
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='list')
 class PostViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint để xem bài viết
@@ -81,6 +87,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
+    @method_decorator(cache_page(settings.CACHE_TTL_SECONDS))
     @action(detail=False, methods=['get'])
     def featured(self, request):
         """Lấy các bài viết nổi bật"""
@@ -88,6 +95,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(posts, many=True)
         return Response(serializer.data)
 
+    @method_decorator(cache_page(settings.CACHE_TTL_SECONDS))
     @action(detail=False, methods=['get'], url_path='by_category')
     def by_category(self, request):
         """
@@ -141,6 +149,8 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='list')
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='retrieve')
 class PageViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint để xem trang tĩnh
@@ -153,6 +163,7 @@ class PageViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
 
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='list')
 class DocumentViewSet(viewsets.ModelViewSet):
     """Document API - Full CRUD with file upload"""
     
@@ -214,6 +225,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return Response({'detail': _('Document deleted')}, status=status.HTTP_204_NO_CONTENT)
 
 
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='list')
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='retrieve')
 class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint để xem tổ chuyên môn
@@ -224,6 +237,7 @@ class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = DepartmentSerializer
     permission_classes = [AllowAny]
     
+    @method_decorator(cache_page(settings.CACHE_TTL_SECONDS))
     @action(detail=True, methods=['get'])
     def staff(self, request, pk=None):
         """Lấy danh sách nhân sự của tổ"""
@@ -233,6 +247,8 @@ class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
 
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='list')
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='retrieve')
 class StaffViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint để xem nhân sự
@@ -261,6 +277,8 @@ class StaffViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
 
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='list')
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='retrieve')
 class PhotoAlbumViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint để xem album ảnh
@@ -279,6 +297,8 @@ class PhotoAlbumViewSet(viewsets.ReadOnlyModelViewSet):
         return PhotoAlbumListSerializer
 
 
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='list')
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='retrieve')
 class VideoViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint để xem video
@@ -293,6 +313,7 @@ class VideoViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ['title', 'description']
     pagination_class = PostPagination
     
+    @method_decorator(cache_page(settings.CACHE_TTL_SECONDS))
     @action(detail=False, methods=['get'])
     def featured(self, request):
         """Lấy các video nổi bật"""
@@ -301,6 +322,7 @@ class VideoViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
 
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='list')
 class BannerViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint để xem banner
@@ -311,6 +333,7 @@ class BannerViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
 
+@method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='list')
 class ExternalLinkViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint để xem liên kết ngoài
@@ -348,6 +371,7 @@ class SiteSettingView(APIView):
 
     permission_classes = [AllowAny]
 
+    @method_decorator(cache_page(settings.CACHE_TTL_SECONDS))
     def get(self, request):
         setting = SiteSetting.objects.order_by('-updated_at').first()
         document_items = []

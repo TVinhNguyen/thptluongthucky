@@ -137,6 +137,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Media files (User uploads)
 MEDIA_URL = '/media/'
@@ -276,3 +277,24 @@ cloudinary.config(
 )
 
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
+# Cache configuration
+# Default: 120s (2 minutes). Override via env for easy tuning.
+CACHE_TTL_SECONDS = int(os.environ.get("CACHE_TTL_SECONDS", "120"))
+
+REDIS_URL = os.environ.get("REDIS_URL", "").strip()
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+        }
+    }
+else:
+    # Fallback for local/dev when Redis is not configured
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "thptluongthucky-cache",
+        }
+    }
