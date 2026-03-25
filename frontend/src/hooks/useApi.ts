@@ -1,12 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, type Post, type Category, type Document, type Staff, type Department, type Banner, type ExternalLink, type ContactMessage } from '@/lib/api';
 
+const PUBLIC_REFRESH_INTERVAL_MS = Number(import.meta.env.VITE_PUBLIC_REFRESH_INTERVAL_MS || 120000);
+
+const publicAutoRefreshOptions = {
+  refetchInterval: PUBLIC_REFRESH_INTERVAL_MS,
+  refetchOnWindowFocus: true,
+} as const;
+
 // Categories hooks
 export function useCategories() {
   return useQuery({
     queryKey: ['categories'],
     queryFn: api.categories.getAll,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: PUBLIC_REFRESH_INTERVAL_MS,
+    ...publicAutoRefreshOptions,
   });
 }
 
@@ -38,7 +46,8 @@ export function useFeaturedPosts() {
   return useQuery({
     queryKey: ['posts', 'featured'],
     queryFn: api.posts.getFeatured,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: PUBLIC_REFRESH_INTERVAL_MS,
+    ...publicAutoRefreshOptions,
   });
 }
 
@@ -47,6 +56,8 @@ export function usePostsByCategory(categorySlug: string, page?: number, search?:
     queryKey: ['posts', 'category', categorySlug, page, search],
     queryFn: () => api.posts.getByCategory(categorySlug, page, search),
     enabled: !!categorySlug,
+    staleTime: PUBLIC_REFRESH_INTERVAL_MS,
+    ...publicAutoRefreshOptions,
   });
 }
 
@@ -82,6 +93,8 @@ export function useDocuments(params?: { page?: number; doc_type?: string; doc_so
       const response = await api.documents.getAll(params);
       return response;
     },
+    staleTime: PUBLIC_REFRESH_INTERVAL_MS,
+    ...publicAutoRefreshOptions,
   });
 }
 
@@ -197,7 +210,8 @@ export function useBanners() {
   return useQuery({
     queryKey: ['banners'],
     queryFn: api.banners.getAll,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: PUBLIC_REFRESH_INTERVAL_MS,
+    ...publicAutoRefreshOptions,
   });
 }
 
@@ -206,7 +220,8 @@ export function useExternalLinks() {
   return useQuery({
     queryKey: ['externalLinks'],
     queryFn: api.externalLinks.getAll,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: PUBLIC_REFRESH_INTERVAL_MS,
+    ...publicAutoRefreshOptions,
   });
 }
 
@@ -215,7 +230,8 @@ export function useSiteSettings() {
   return useQuery({
     queryKey: ['siteSettings'],
     queryFn: api.siteSettings.get,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: PUBLIC_REFRESH_INTERVAL_MS,
+    ...publicAutoRefreshOptions,
   });
 }
 
