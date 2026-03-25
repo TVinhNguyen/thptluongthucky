@@ -1,5 +1,5 @@
 // API Configuration and Service
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Types for API responses
 export interface Category {
@@ -109,8 +109,8 @@ export interface Video {
   id: number;
   title: string;
   video_url: string;
-  video_file?: {url: string} | string;
-  thumbnail?: {url: string} | string | null;
+  video_file?: { url: string } | string;
+  thumbnail?: { url: string } | string | null;
   description: string;
   is_featured: boolean;
   created_at: string;
@@ -169,8 +169,14 @@ export interface PaginatedResponse<T> {
 
 // API helper function
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
+  // Use relative path if API_BASE_URL is not set
+  let url = endpoint;
+  if (API_BASE_URL !== '/api') {
+    url = `${API_BASE_URL}${endpoint}`;
+  } else {
+    url = `/api${endpoint}`;
+  }
+
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
