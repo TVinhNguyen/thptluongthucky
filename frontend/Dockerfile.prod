@@ -12,7 +12,8 @@ RUN npm ci
 COPY . .
 
 # Build the app with environment variable
-ARG VITE_API_URL=https://api.yourdomain.com
+# Default to /api (relative path) for production
+ARG VITE_API_URL=/api
 ENV VITE_API_URL=${VITE_API_URL}
 
 RUN npm run build
