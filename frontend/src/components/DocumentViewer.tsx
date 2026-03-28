@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, AlertCircle } from "lucide-react";
+import { Download, AlertCircle, Maximize2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Document } from "@/lib/api";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface DocumentViewerProps {
   document: Document | null;
@@ -40,7 +42,14 @@ export const DocumentViewer = ({ document, open, onOpenChange }: DocumentViewerP
   const getViewerUrl = (): string => {
     if (!fileUrl) return "";
     if (isPDF) {
-      return `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(fileUrl)}`;
+      // Use backend proxy endpoint for PDF (serves with Content-Disposition: inline)
+      // file_view_url is a relative path like /api/documents/5/preview/
+      // Need to prefix with backend base URL so iframe doesn't hit the frontend router
+      const viewUrl = document.file_view_url || fileUrl;
+      if (viewUrl.startsWith('/api/') && API_BASE_URL !== '/api') {
+        return API_BASE_URL.replace(/\/api$/, '') + viewUrl;
+      }
+      return viewUrl;
     } else if (isWord || isExcel || isPowerPoint) {
       // Use Microsoft Office Web Viewer for Office documents
       return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
@@ -85,7 +94,7 @@ export const DocumentViewer = ({ document, open, onOpenChange }: DocumentViewerP
               }}
             />
           ) : isPDF || isWord || isExcel || isPowerPoint ? (
-            <div className="border rounded-lg overflow-hidden bg-gray-50 mx-4">
+            <div className="relative border rounded-lg overflow-hidden bg-gray-50 mx-4">
               {loading && (
                 <div className="h-[600px] flex items-center justify-center">
                   <div className="text-center">
@@ -105,6 +114,18 @@ export const DocumentViewer = ({ document, open, onOpenChange }: DocumentViewerP
                 allowFullScreen
                 title={document.title}
               />
+              {!loading && (
+                <a
+                  href={getViewerUrl()}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="absolute bottom-3 right-3"
+                >
+                  <Button size="icon" variant="secondary" className="shadow-md h-8 w-8">
+                    <Maximize2 className="w-4 h-4" />
+                  </Button>
+                </a>
+              )}
             </div>
           ) : (
             <div className="px-4">

@@ -57,22 +57,23 @@ class PageSerializer(serializers.ModelSerializer):
 
 class DocumentSerializer(serializers.ModelSerializer):
     """Document serializer - read only"""
-    
+
     file_url = serializers.SerializerMethodField()
+    file_view_url = serializers.SerializerMethodField()
     file_name = serializers.SerializerMethodField()
     formatted_file_size = serializers.SerializerMethodField()
     doc_type_display = serializers.CharField(source='get_doc_type_display', read_only=True)
-    
+
     class Meta:
         model = Document
         fields = [
             'id', 'code', 'title', 'doc_type', 'doc_type_display',
-            'file', 'file_url', 'file_name', 'file_size', 'formatted_file_size',
+            'file', 'file_url', 'file_view_url', 'file_name', 'file_size', 'formatted_file_size',
             'published_date', 'signer', 'description', 'download_count', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'file_size', 'download_count', 'created_at', 'updated_at']
-    
-    def get_file_url(self, obj):
+
+    def _get_raw_url(self, obj):
         try:
             return obj.file.url if (obj.file and hasattr(obj.file, 'url')) else None
         except Exception:
@@ -81,6 +82,16 @@ class DocumentSerializer(serializers.ModelSerializer):
                 url, _ = cloudinary_url(str(obj.file), resource_type='raw')
                 return url
             return None
+
+    def get_file_url(self, obj):
+        return self._get_raw_url(obj)
+
+    def get_file_view_url(self, obj):
+        """URL for inline viewing — uses backend proxy to avoid Cloudinary Content-Disposition: attachment."""
+        filename = obj.file_name or ''
+        if filename.lower().endswith('.pdf'):
+            return f'/api/documents/{obj.pk}/preview/'
+        return self._get_raw_url(obj)
     
     def get_file_name(self, obj):
         return obj.file_name

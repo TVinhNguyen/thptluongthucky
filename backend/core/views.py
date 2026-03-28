@@ -2,15 +2,19 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import F
 from django.conf import settings
+from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import cache_page
+from django.views.decorators.clickjacking import xframe_options_exempt
 import logging
+import requests
 
 from .models import (
     Category, Post, Page, Document, Department, Staff,
@@ -29,6 +33,12 @@ from .serializers import (
 from .utils import import_timetable_from_excel
 
 logger = logging.getLogger(__name__)
+
+
+class DocumentPreviewThrottle(AnonRateThrottle):
+    """Rate limit preview endpoint: 30 requests/minute per IP."""
+    rate = '30/min'
+
 
 class PostPagination(PageNumberPagination):
     page_size = 10  # bao nhiêu bài / 1 page
@@ -180,7 +190,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return DocumentSerializer
     
     def get_permissions(self):
-        if self.action in ['list', 'retrieve', 'download']:
+        if self.action in ['list', 'retrieve', 'download', 'preview']:
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsAuthenticated]
@@ -219,6 +229,69 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(document)
         return Response(serializer.data)
     
+    @xframe_options_exempt
+    @method_decorator(cache_page(60 * 10))  # Cache 10 minutes — avoids repeated Cloudinary fetches
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny],
+            throttle_classes=[DocumentPreviewThrottle])
+    def preview(self, request, pk=None):
+        """Proxy file content from Cloudinary for inline viewing.
+
+        Cloudinary blocks direct PDF delivery on free plans (returns 401).
+        Workaround: download via Cloudinary's archive API then extract.
+        """
+        import zipfile
+        import io
+        from cloudinary.utils import download_archive_url
+
+        document = self.get_object()
+        if not document.file:
+            return Response({'detail': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        filename = document.file_name or ''
+
+        # First try direct URL (works for non-PDF files like docx, xlsx)
+        try:
+            direct_url = document.file.url
+            resp = requests.get(direct_url, timeout=30)
+            if resp.status_code == 200 and len(resp.content) > 0:
+                content_type = resp.headers.get('Content-Type', 'application/octet-stream')
+                if filename.lower().endswith('.pdf'):
+                    content_type = 'application/pdf'
+                response = HttpResponse(resp.content, content_type=content_type)
+                response['Content-Disposition'] = f'inline; filename="{filename}"'
+                return response
+        except Exception:
+            pass
+
+        # Fallback: use Cloudinary archive API (works for PDFs blocked by 401)
+        try:
+            # Extract full public_id from file.url (includes extension like .pdf)
+            try:
+                full_public_id = document.file.url.split('/')[-1].split('?')[0]
+            except Exception:
+                full_public_id = str(document.file)
+
+            archive_url = download_archive_url(
+                public_ids=[full_public_id],
+                resource_type='raw',
+                target_format='zip'
+            )
+            resp = requests.get(archive_url, timeout=30)
+            resp.raise_for_status()
+
+            z = zipfile.ZipFile(io.BytesIO(resp.content))
+            file_content = z.read(z.namelist()[0])
+
+            content_type = 'application/octet-stream'
+            if filename.lower().endswith('.pdf'):
+                content_type = 'application/pdf'
+
+            response = HttpResponse(file_content, content_type=content_type)
+            response['Content-Disposition'] = f'inline; filename="{filename}"'
+            return response
+        except Exception:
+            return Response({'detail': 'Cannot fetch file'}, status=status.HTTP_502_BAD_GATEWAY)
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)

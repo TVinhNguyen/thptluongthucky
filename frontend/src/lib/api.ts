@@ -49,6 +49,7 @@ export interface Document {
   doc_type_display: string;
   file: string;
   file_url: string;
+  file_view_url: string;
   file_name: string;
   file_size: number;
   formatted_file_size: string;
