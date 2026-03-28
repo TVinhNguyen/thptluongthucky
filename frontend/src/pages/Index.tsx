@@ -5,10 +5,15 @@ import LeftSidebar from "@/components/LeftSidebar";
 import MainContent from "@/components/MainContent";
 import RightSidebar from "@/components/RightSidebar";
 import Footer from "@/components/Footer";
+import { SEO, organizationSchema } from "@/components/SEO";
 
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        url="/"
+        jsonLd={organizationSchema()}
+      />
       <Header />
       <Hero />
       <Navigation />

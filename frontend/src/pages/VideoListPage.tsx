@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { useVideos } from "@/hooks/useApi";
 import { formatDate, type Video } from "@/lib/api";
+import { SEO, collectionPageSchema } from "@/components/SEO";
 
 const VideoListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -23,6 +24,12 @@ const VideoListPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Thư viện video"
+        description="Thư viện video hoạt động của Trường THPT Lương Thúc Kỳ."
+        url="/chuyen-muc/video"
+        jsonLd={collectionPageSchema("Thư viện video", "Video hoạt động của Trường THPT Lương Thúc Kỳ", "/chuyen-muc/video")}
+      />
       <Header />
       <Navigation />
 

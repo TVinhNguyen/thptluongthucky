@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { usePhotoAlbum } from "@/hooks/useApi";
 import { formatDate, type Photo } from "@/lib/api";
 import { X, ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { SEO, imageGallerySchema } from "@/components/SEO";
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
@@ -77,6 +78,15 @@ const PhotoAlbumDetailPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {data && (
+        <SEO
+          title={`${data.name} - Thư viện ảnh`}
+          description={data.description || `Album ảnh ${data.name} - Trường THPT Lương Thúc Kỳ`}
+          image={data.cover_image_url || undefined}
+          url={`/chuyen-muc/anh/${slug}`}
+          jsonLd={imageGallerySchema(data)}
+        />
+      )}
       <Header />
       <Navigation />
 

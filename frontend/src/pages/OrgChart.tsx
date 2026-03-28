@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getMediaUrl, type Department, type Staff } from "@/lib/api";
 import { useDepartments, useDepartmentStaff, useStaff } from "@/hooks/useApi";
 import DepartmentCard from "./DepartmentCard";
+import { SEO } from "@/components/SEO";
 
 const OrgChart = () => {
   const POSITION_PRINCIPAL = 'Hiệu trưởng';
@@ -23,9 +24,14 @@ const OrgChart = () => {
   const { data: departments = [], isLoading: loadingDepartments } = useDepartments();
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Cơ cấu tổ chức"
+        description="Cơ cấu tổ chức Trường THPT Lương Thúc Kỳ - Ban giám hiệu, các phòng ban và tổ chuyên môn."
+        url="/co-cau-to-chuc"
+      />
       <Header />
       <Navigation />
-      
+
       <div className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
           <Breadcrumb

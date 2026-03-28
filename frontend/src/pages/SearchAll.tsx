@@ -15,6 +15,7 @@ import { Search, FileText, Download, Eye } from "lucide-react";
 import { useDownloadDocument } from "@/hooks/useApi";
 import { api, formatDate, formatFileSize, type Document } from "@/lib/api";
 import { DOCUMENT_LIBRARY_TEXT, SEARCH_TEXT } from "@/constants/appText";
+import { SEO } from "@/components/SEO";
 
 const SearchAll = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -148,6 +149,12 @@ const SearchAll = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title={query ? `Tìm kiếm: ${query}` : "Tìm kiếm"}
+        description={`Kết quả tìm kiếm ${query ? `cho "${query}"` : ""} trên Trường THPT Lương Thúc Kỳ`}
+        url={`/tim-kiem${query ? `?q=${encodeURIComponent(query)}` : ""}`}
+        noindex
+      />
       <Header />
       <Navigation />
 

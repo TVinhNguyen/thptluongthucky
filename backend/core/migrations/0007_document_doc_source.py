@@ -10,9 +10,21 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='document',
-            name='doc_source',
-            field=models.CharField(blank=True, choices=[('SO_GDDT', 'Sở GD&ĐT'), ('TRUONG', 'Trường'), ('HDND_UBND', 'HĐND-UBND xã'), ('THONG_BAO', 'Thông báo')], max_length=50, null=True),
+        # Use SeparateDatabaseAndState to handle the case where the column
+        # already exists in the DB (e.g. created by a previous deployment).
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunSQL(
+                    sql='ALTER TABLE "core_document" ADD COLUMN IF NOT EXISTS "doc_source" varchar(50) NULL',
+                    reverse_sql='ALTER TABLE "core_document" DROP COLUMN IF EXISTS "doc_source"',
+                ),
+            ],
+            state_operations=[
+                migrations.AddField(
+                    model_name='document',
+                    name='doc_source',
+                    field=models.CharField(blank=True, choices=[('SO_GDDT', 'Sở GD&ĐT'), ('TRUONG', 'Trường'), ('HDND_UBND', 'HĐND-UBND xã'), ('THONG_BAO', 'Thông báo')], max_length=50, null=True),
+                ),
+            ],
         ),
     ]

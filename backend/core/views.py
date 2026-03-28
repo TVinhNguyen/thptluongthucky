@@ -2,15 +2,19 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import F
 from django.conf import settings
+from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import cache_page
+from django.views.decorators.clickjacking import xframe_options_exempt
 import logging
+import requests
 
 from .models import (
     Category, Post, Page, Document, Department, Staff,
@@ -29,6 +33,12 @@ from .serializers import (
 from .utils import import_timetable_from_excel
 
 logger = logging.getLogger(__name__)
+
+
+class DocumentPreviewThrottle(AnonRateThrottle):
+    """Rate limit preview endpoint: 30 requests/minute per IP."""
+    rate = '30/min'
+
 
 class PostPagination(PageNumberPagination):
     page_size = 10  # bao nhiêu bài / 1 page
@@ -180,7 +190,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return DocumentSerializer
     
     def get_permissions(self):
-        if self.action in ['list', 'retrieve', 'download']:
+        if self.action in ['list', 'retrieve', 'download', 'preview']:
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsAuthenticated]
@@ -219,6 +229,69 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(document)
         return Response(serializer.data)
     
+    @xframe_options_exempt
+    @method_decorator(cache_page(60 * 10))  # Cache 10 minutes — avoids repeated Cloudinary fetches
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny],
+            throttle_classes=[DocumentPreviewThrottle])
+    def preview(self, request, pk=None):
+        """Proxy file content from Cloudinary for inline viewing.
+
+        Cloudinary blocks direct PDF delivery on free plans (returns 401).
+        Workaround: download via Cloudinary's archive API then extract.
+        """
+        import zipfile
+        import io
+        from cloudinary.utils import download_archive_url
+
+        document = self.get_object()
+        if not document.file:
+            return Response({'detail': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        filename = document.file_name or ''
+
+        # First try direct URL (works for non-PDF files like docx, xlsx)
+        try:
+            direct_url = document.file.url
+            resp = requests.get(direct_url, timeout=30)
+            if resp.status_code == 200 and len(resp.content) > 0:
+                content_type = resp.headers.get('Content-Type', 'application/octet-stream')
+                if filename.lower().endswith('.pdf'):
+                    content_type = 'application/pdf'
+                response = HttpResponse(resp.content, content_type=content_type)
+                response['Content-Disposition'] = f'inline; filename="{filename}"'
+                return response
+        except Exception:
+            pass
+
+        # Fallback: use Cloudinary archive API (works for PDFs blocked by 401)
+        try:
+            # Extract full public_id from file.url (includes extension like .pdf)
+            try:
+                full_public_id = document.file.url.split('/')[-1].split('?')[0]
+            except Exception:
+                full_public_id = str(document.file)
+
+            archive_url = download_archive_url(
+                public_ids=[full_public_id],
+                resource_type='raw',
+                target_format='zip'
+            )
+            resp = requests.get(archive_url, timeout=30)
+            resp.raise_for_status()
+
+            z = zipfile.ZipFile(io.BytesIO(resp.content))
+            file_content = z.read(z.namelist()[0])
+
+            content_type = 'application/octet-stream'
+            if filename.lower().endswith('.pdf'):
+                content_type = 'application/pdf'
+
+            response = HttpResponse(file_content, content_type=content_type)
+            response['Content-Disposition'] = f'inline; filename="{filename}"'
+            return response
+        except Exception:
+            return Response({'detail': 'Cannot fetch file'}, status=status.HTTP_502_BAD_GATEWAY)
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
@@ -559,4 +632,206 @@ class TimetableImportView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+# ============= SITEMAP =============
+
+SITE_URL = "https://thptluongthucky.edu.vn"
+
+
+@cache_page(60 * 60)  # Cache 1 hour
+def sitemap_xml(request):
+    """Generate dynamic XML sitemap from database content."""
+    urls = []
+
+    # Static pages
+    static_pages = [
+        ("/", "daily", "1.0"),
+        ("/gioi-thieu", "weekly", "0.8"),
+        ("/co-cau-to-chuc", "weekly", "0.7"),
+        ("/can-bo-giao-vien", "weekly", "0.7"),
+        ("/thu-vien-van-ban", "daily", "0.8"),
+        ("/chuyen-muc/anh", "weekly", "0.6"),
+        ("/chuyen-muc/video", "weekly", "0.6"),
+        ("/chuyen-muc/thoi-khoa-bieu", "weekly", "0.7"),
+    ]
+    for path, freq, priority in static_pages:
+        urls.append(f"""  <url>
+    <loc>{SITE_URL}{path}</loc>
+    <changefreq>{freq}</changefreq>
+    <priority>{priority}</priority>
+  </url>""")
+
+    # Published posts
+    posts = Post.objects.filter(status='published').order_by('-published_at')[:500]
+    for post in posts:
+        lastmod = (post.updated_at or post.published_at).strftime("%Y-%m-%d")
+        urls.append(f"""  <url>
+    <loc>{SITE_URL}/bai-viet/{post.slug}</loc>
+    <lastmod>{lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>""")
+
+    # Categories
+    categories = Category.objects.all()
+    for cat in categories:
+        urls.append(f"""  <url>
+    <loc>{SITE_URL}/chuyen-muc/{cat.slug}</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>""")
+
+    # Photo albums
+    albums = PhotoAlbum.objects.all().order_by('-created_at')[:100]
+    for album in albums:
+        urls.append(f"""  <url>
+    <loc>{SITE_URL}/chuyen-muc/anh/{album.slug}</loc>
+    <lastmod>{album.created_at.strftime("%Y-%m-%d")}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>""")
+
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{chr(10).join(urls)}
+</urlset>"""
+
+    return HttpResponse(xml, content_type="application/xml")
+
+
+# ============= PRERENDER FOR BOTS =============
+
+DEFAULT_OG_TITLE = "Trường THPT Lương Thúc Kỳ"
+DEFAULT_OG_DESC = (
+    "Trang thông tin điện tử Trường THPT Lương Thúc Kỳ. "
+    "Cập nhật tin tức, văn bản, thời khóa biểu, hoạt động giáo dục."
+)
+DEFAULT_OG_IMAGE = f"{SITE_URL}/logo_LTK.png"
+
+STATIC_PAGE_META = {
+    "/": (DEFAULT_OG_TITLE, DEFAULT_OG_DESC),
+    "/gioi-thieu": ("Giới thiệu | " + DEFAULT_OG_TITLE, "Giới thiệu về Trường THPT Lương Thúc Kỳ."),
+    "/co-cau-to-chuc": ("Cơ cấu tổ chức | " + DEFAULT_OG_TITLE, "Cơ cấu tổ chức Trường THPT Lương Thúc Kỳ."),
+    "/can-bo-giao-vien": ("Cán bộ - Giáo viên | " + DEFAULT_OG_TITLE, "Danh sách cán bộ, giáo viên Trường THPT Lương Thúc Kỳ."),
+    "/thu-vien-van-ban": ("Thư viện văn bản | " + DEFAULT_OG_TITLE, "Thư viện văn bản, công văn, quyết định."),
+    "/chuyen-muc/anh": ("Thư viện ảnh | " + DEFAULT_OG_TITLE, "Thư viện ảnh hoạt động."),
+    "/chuyen-muc/video": ("Thư viện video | " + DEFAULT_OG_TITLE, "Thư viện video hoạt động."),
+    "/chuyen-muc/thoi-khoa-bieu": ("Thời khóa biểu | " + DEFAULT_OG_TITLE, "Thời khóa biểu các lớp học."),
+}
+
+
+def _build_meta_html(title, description, image, url, og_type="website",
+                     published_time=None, json_ld=None):
+    """Build a minimal HTML page with correct meta tags for bot crawlers."""
+    import json as json_mod
+    meta = f"""<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<title>{title}</title>
+<meta name="description" content="{description}"/>
+<link rel="canonical" href="{url}"/>
+<meta property="og:site_name" content="{DEFAULT_OG_TITLE}"/>
+<meta property="og:title" content="{title}"/>
+<meta property="og:description" content="{description}"/>
+<meta property="og:type" content="{og_type}"/>
+<meta property="og:url" content="{url}"/>
+<meta property="og:image" content="{image}"/>
+<meta property="og:locale" content="vi_VN"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="{title}"/>
+<meta name="twitter:description" content="{description}"/>
+<meta name="twitter:image" content="{image}"/>"""
+
+    if published_time:
+        meta += f'\n<meta property="article:published_time" content="{published_time}"/>'
+
+    if json_ld:
+        meta += f'\n<script type="application/ld+json">{json_mod.dumps(json_ld, ensure_ascii=False)}</script>'
+
+    meta += """
+</head>
+<body></body>
+</html>"""
+    return meta
+
+
+import re as _re
+
+
+@cache_page(60 * 30)  # Cache 30 minutes
+def prerender_bot(request, url_path=""):
+    """Serve minimal HTML with OG tags for social media / search bots."""
+    import json as json_mod
+    path = "/" + url_path.lstrip("/")
+
+    # 1. Post detail: /bai-viet/<slug>
+    post_match = _re.match(r'^/bai-viet/([^/]+)/?$', path)
+    if post_match:
+        slug = post_match.group(1)
+        try:
+            post = Post.objects.select_related('category').get(slug=slug, status='published')
+            title = f"{post.title} | {DEFAULT_OG_TITLE}"
+            desc = post.summary or post.title
+            image = request.build_absolute_uri(post.thumbnail.url) if post.thumbnail else DEFAULT_OG_IMAGE
+            url = f"{SITE_URL}/bai-viet/{post.slug}"
+            json_ld = {
+                "@context": "https://schema.org",
+                "@type": "Article",
+                "headline": post.title,
+                "description": desc,
+                "image": image,
+                "datePublished": post.published_at.isoformat() if post.published_at else "",
+                "publisher": {"@type": "Organization", "name": DEFAULT_OG_TITLE},
+                "url": url,
+            }
+            html = _build_meta_html(
+                title, desc, image, url,
+                og_type="article",
+                published_time=post.published_at.isoformat() if post.published_at else None,
+                json_ld=json_ld,
+            )
+            return HttpResponse(html, content_type="text/html")
+        except Post.DoesNotExist:
+            pass
+
+    # 2. Category: /chuyen-muc/<slug>
+    cat_match = _re.match(r'^/chuyen-muc/([^/]+)/?$', path)
+    if cat_match and cat_match.group(1) not in ('anh', 'video', 'thoi-khoa-bieu'):
+        slug = cat_match.group(1)
+        try:
+            cat = Category.objects.get(slug=slug)
+            title = f"{cat.name} | {DEFAULT_OG_TITLE}"
+            desc = f"Bài viết thuộc chuyên mục {cat.name} - {DEFAULT_OG_TITLE}"
+            html = _build_meta_html(title, desc, DEFAULT_OG_IMAGE, f"{SITE_URL}/chuyen-muc/{slug}")
+            return HttpResponse(html, content_type="text/html")
+        except Category.DoesNotExist:
+            pass
+
+    # 3. Photo album detail: /chuyen-muc/anh/<slug>
+    album_match = _re.match(r'^/chuyen-muc/anh/([^/]+)/?$', path)
+    if album_match:
+        slug = album_match.group(1)
+        try:
+            album = PhotoAlbum.objects.get(slug=slug)
+            title = f"{album.name} - Thư viện ảnh | {DEFAULT_OG_TITLE}"
+            desc = album.description or f"Album ảnh {album.name}"
+            image = album.cover_image.url if album.cover_image else DEFAULT_OG_IMAGE
+            if not image.startswith("http"):
+                image = request.build_absolute_uri(image)
+            html = _build_meta_html(title, desc, image, f"{SITE_URL}/chuyen-muc/anh/{slug}")
+            return HttpResponse(html, content_type="text/html")
+        except PhotoAlbum.DoesNotExist:
+            pass
+
+    # 4. Static pages
+    if path in STATIC_PAGE_META:
+        title, desc = STATIC_PAGE_META[path]
+        html = _build_meta_html(title, desc, DEFAULT_OG_IMAGE, f"{SITE_URL}{path}")
+        return HttpResponse(html, content_type="text/html")
+
+    # Fallback: default meta
+    html = _build_meta_html(DEFAULT_OG_TITLE, DEFAULT_OG_DESC, DEFAULT_OG_IMAGE, f"{SITE_URL}{path}")
+    return HttpResponse(html, content_type="text/html")
 

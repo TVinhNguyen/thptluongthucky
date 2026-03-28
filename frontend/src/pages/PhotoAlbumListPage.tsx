@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { usePhotoAlbums } from "@/hooks/useApi";
 import { formatDate, type PhotoAlbum } from "@/lib/api";
+import { SEO, collectionPageSchema } from "@/components/SEO";
 
 const PhotoAlbumListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -24,6 +25,12 @@ const PhotoAlbumListPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Thư viện ảnh"
+        description="Thư viện ảnh hoạt động của Trường THPT Lương Thúc Kỳ."
+        url="/chuyen-muc/anh"
+        jsonLd={collectionPageSchema("Thư viện ảnh", "Album ảnh hoạt động của Trường THPT Lương Thúc Kỳ", "/chuyen-muc/anh")}
+      />
       <Header />
       <Navigation />
 
