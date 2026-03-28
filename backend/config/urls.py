@@ -22,13 +22,20 @@ from django.views.static import serve
 from django.conf import settings
 from django.conf.urls.static import static
 from core import views_errors
+from core.views import sitemap_xml, prerender_bot
 
 urlpatterns = [
     path('', RedirectView.as_view(url='/api/', permanent=False)),
     path('admin/', admin.site.urls),
     path('health/', lambda r: JsonResponse({"status": "ok"})),  # Health check endpoint
     path('api/', include('core.urls')),  # API endpoints
+    path('api/sitemap.xml', sitemap_xml, name='sitemap'),
     path('ckeditor5/', include('django_ckeditor_5.urls')),  # CKEditor 5 upload
+]
+
+# Prerender: catch-all for bot requests (nginx proxies bot traffic here)
+urlpatterns += [
+    re_path(r'^_prerender/(?P<url_path>.*)$', prerender_bot, name='prerender'),
 ]
 
 handler400 = views_errors.error_400

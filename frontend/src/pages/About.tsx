@@ -12,6 +12,7 @@ import { usePages } from "@/hooks/useApi";
 import { formatDate } from "@/lib/api";
 import { prependMediaBaseUrl } from "@/lib/util";
 import { BookOpen, Target, Eye, Star, Calendar, Clock } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 const defaultHighlights = [
   { title: "Sứ mệnh", content: "Nội dung đang cập nhật.", icon: Target },
@@ -138,6 +139,11 @@ const AboutPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title={mainPage.title}
+        description={`${mainPage.title} - Giới thiệu về Trường THPT Lương Thúc Kỳ`}
+        url="/gioi-thieu"
+      />
       <Header />
       <Navigation />
 

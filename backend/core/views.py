@@ -633,3 +633,205 @@ class TimetableImportView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+
+# ============= SITEMAP =============
+
+SITE_URL = "https://thptluongthucky.edu.vn"
+
+
+@cache_page(60 * 60)  # Cache 1 hour
+def sitemap_xml(request):
+    """Generate dynamic XML sitemap from database content."""
+    urls = []
+
+    # Static pages
+    static_pages = [
+        ("/", "daily", "1.0"),
+        ("/gioi-thieu", "weekly", "0.8"),
+        ("/co-cau-to-chuc", "weekly", "0.7"),
+        ("/can-bo-giao-vien", "weekly", "0.7"),
+        ("/thu-vien-van-ban", "daily", "0.8"),
+        ("/chuyen-muc/anh", "weekly", "0.6"),
+        ("/chuyen-muc/video", "weekly", "0.6"),
+        ("/chuyen-muc/thoi-khoa-bieu", "weekly", "0.7"),
+    ]
+    for path, freq, priority in static_pages:
+        urls.append(f"""  <url>
+    <loc>{SITE_URL}{path}</loc>
+    <changefreq>{freq}</changefreq>
+    <priority>{priority}</priority>
+  </url>""")
+
+    # Published posts
+    posts = Post.objects.filter(status='published').order_by('-published_at')[:500]
+    for post in posts:
+        lastmod = (post.updated_at or post.published_at).strftime("%Y-%m-%d")
+        urls.append(f"""  <url>
+    <loc>{SITE_URL}/bai-viet/{post.slug}</loc>
+    <lastmod>{lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>""")
+
+    # Categories
+    categories = Category.objects.all()
+    for cat in categories:
+        urls.append(f"""  <url>
+    <loc>{SITE_URL}/chuyen-muc/{cat.slug}</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>""")
+
+    # Photo albums
+    albums = PhotoAlbum.objects.all().order_by('-created_at')[:100]
+    for album in albums:
+        urls.append(f"""  <url>
+    <loc>{SITE_URL}/chuyen-muc/anh/{album.slug}</loc>
+    <lastmod>{album.created_at.strftime("%Y-%m-%d")}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>""")
+
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{chr(10).join(urls)}
+</urlset>"""
+
+    return HttpResponse(xml, content_type="application/xml")
+
+
+# ============= PRERENDER FOR BOTS =============
+
+DEFAULT_OG_TITLE = "Trường THPT Lương Thúc Kỳ"
+DEFAULT_OG_DESC = (
+    "Trang thông tin điện tử Trường THPT Lương Thúc Kỳ. "
+    "Cập nhật tin tức, văn bản, thời khóa biểu, hoạt động giáo dục."
+)
+DEFAULT_OG_IMAGE = f"{SITE_URL}/logo_LTK.png"
+
+STATIC_PAGE_META = {
+    "/": (DEFAULT_OG_TITLE, DEFAULT_OG_DESC),
+    "/gioi-thieu": ("Giới thiệu | " + DEFAULT_OG_TITLE, "Giới thiệu về Trường THPT Lương Thúc Kỳ."),
+    "/co-cau-to-chuc": ("Cơ cấu tổ chức | " + DEFAULT_OG_TITLE, "Cơ cấu tổ chức Trường THPT Lương Thúc Kỳ."),
+    "/can-bo-giao-vien": ("Cán bộ - Giáo viên | " + DEFAULT_OG_TITLE, "Danh sách cán bộ, giáo viên Trường THPT Lương Thúc Kỳ."),
+    "/thu-vien-van-ban": ("Thư viện văn bản | " + DEFAULT_OG_TITLE, "Thư viện văn bản, công văn, quyết định."),
+    "/chuyen-muc/anh": ("Thư viện ảnh | " + DEFAULT_OG_TITLE, "Thư viện ảnh hoạt động."),
+    "/chuyen-muc/video": ("Thư viện video | " + DEFAULT_OG_TITLE, "Thư viện video hoạt động."),
+    "/chuyen-muc/thoi-khoa-bieu": ("Thời khóa biểu | " + DEFAULT_OG_TITLE, "Thời khóa biểu các lớp học."),
+}
+
+
+def _build_meta_html(title, description, image, url, og_type="website",
+                     published_time=None, json_ld=None):
+    """Build a minimal HTML page with correct meta tags for bot crawlers."""
+    import json as json_mod
+    meta = f"""<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<title>{title}</title>
+<meta name="description" content="{description}"/>
+<link rel="canonical" href="{url}"/>
+<meta property="og:site_name" content="{DEFAULT_OG_TITLE}"/>
+<meta property="og:title" content="{title}"/>
+<meta property="og:description" content="{description}"/>
+<meta property="og:type" content="{og_type}"/>
+<meta property="og:url" content="{url}"/>
+<meta property="og:image" content="{image}"/>
+<meta property="og:locale" content="vi_VN"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="{title}"/>
+<meta name="twitter:description" content="{description}"/>
+<meta name="twitter:image" content="{image}"/>"""
+
+    if published_time:
+        meta += f'\n<meta property="article:published_time" content="{published_time}"/>'
+
+    if json_ld:
+        meta += f'\n<script type="application/ld+json">{json_mod.dumps(json_ld, ensure_ascii=False)}</script>'
+
+    meta += """
+</head>
+<body></body>
+</html>"""
+    return meta
+
+
+import re as _re
+
+
+@cache_page(60 * 30)  # Cache 30 minutes
+def prerender_bot(request, url_path=""):
+    """Serve minimal HTML with OG tags for social media / search bots."""
+    import json as json_mod
+    path = "/" + url_path.lstrip("/")
+
+    # 1. Post detail: /bai-viet/<slug>
+    post_match = _re.match(r'^/bai-viet/([^/]+)/?$', path)
+    if post_match:
+        slug = post_match.group(1)
+        try:
+            post = Post.objects.select_related('category').get(slug=slug, status='published')
+            title = f"{post.title} | {DEFAULT_OG_TITLE}"
+            desc = post.summary or post.title
+            image = request.build_absolute_uri(post.thumbnail.url) if post.thumbnail else DEFAULT_OG_IMAGE
+            url = f"{SITE_URL}/bai-viet/{post.slug}"
+            json_ld = {
+                "@context": "https://schema.org",
+                "@type": "Article",
+                "headline": post.title,
+                "description": desc,
+                "image": image,
+                "datePublished": post.published_at.isoformat() if post.published_at else "",
+                "publisher": {"@type": "Organization", "name": DEFAULT_OG_TITLE},
+                "url": url,
+            }
+            html = _build_meta_html(
+                title, desc, image, url,
+                og_type="article",
+                published_time=post.published_at.isoformat() if post.published_at else None,
+                json_ld=json_ld,
+            )
+            return HttpResponse(html, content_type="text/html")
+        except Post.DoesNotExist:
+            pass
+
+    # 2. Category: /chuyen-muc/<slug>
+    cat_match = _re.match(r'^/chuyen-muc/([^/]+)/?$', path)
+    if cat_match and cat_match.group(1) not in ('anh', 'video', 'thoi-khoa-bieu'):
+        slug = cat_match.group(1)
+        try:
+            cat = Category.objects.get(slug=slug)
+            title = f"{cat.name} | {DEFAULT_OG_TITLE}"
+            desc = f"Bài viết thuộc chuyên mục {cat.name} - {DEFAULT_OG_TITLE}"
+            html = _build_meta_html(title, desc, DEFAULT_OG_IMAGE, f"{SITE_URL}/chuyen-muc/{slug}")
+            return HttpResponse(html, content_type="text/html")
+        except Category.DoesNotExist:
+            pass
+
+    # 3. Photo album detail: /chuyen-muc/anh/<slug>
+    album_match = _re.match(r'^/chuyen-muc/anh/([^/]+)/?$', path)
+    if album_match:
+        slug = album_match.group(1)
+        try:
+            album = PhotoAlbum.objects.get(slug=slug)
+            title = f"{album.name} - Thư viện ảnh | {DEFAULT_OG_TITLE}"
+            desc = album.description or f"Album ảnh {album.name}"
+            image = album.cover_image.url if album.cover_image else DEFAULT_OG_IMAGE
+            if not image.startswith("http"):
+                image = request.build_absolute_uri(image)
+            html = _build_meta_html(title, desc, image, f"{SITE_URL}/chuyen-muc/anh/{slug}")
+            return HttpResponse(html, content_type="text/html")
+        except PhotoAlbum.DoesNotExist:
+            pass
+
+    # 4. Static pages
+    if path in STATIC_PAGE_META:
+        title, desc = STATIC_PAGE_META[path]
+        html = _build_meta_html(title, desc, DEFAULT_OG_IMAGE, f"{SITE_URL}{path}")
+        return HttpResponse(html, content_type="text/html")
+
+    # Fallback: default meta
+    html = _build_meta_html(DEFAULT_OG_TITLE, DEFAULT_OG_DESC, DEFAULT_OG_IMAGE, f"{SITE_URL}{path}")
+    return HttpResponse(html, content_type="text/html")
+

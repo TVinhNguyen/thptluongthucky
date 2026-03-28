@@ -222,7 +222,7 @@ jobs:
 
     - name: Start services with Docker Compose
       run: |
-        docker compose -f docker-compose.yml up -d
+        docker compose -f docker-compose.yml up -d -V
         sleep 10
 
     - name: Check service health
@@ -274,7 +274,7 @@ jobs:
 
           echo "=== Building and restarting services ==="
           docker compose -f docker-compose.prod.yml pull --ignore-pull-failures || true
-          docker compose -f docker-compose.prod.yml up --build -d
+          docker compose -f docker-compose.prod.yml up --build -d -V
 
           echo "=== Waiting for services to be healthy ==="
           sleep 15

@@ -18,6 +18,7 @@ import {
 import { useStaff, useDepartments } from "@/hooks/useApi";
 import { getMediaUrl } from "@/lib/api";
 import { useLocation } from "react-router-dom";
+import { SEO } from "@/components/SEO";
 
 const normalizeSlug = (text: string) =>
   text
@@ -71,9 +72,14 @@ const Staff = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Cán bộ - Giáo viên"
+        description="Danh sách cán bộ, giáo viên Trường THPT Lương Thúc Kỳ."
+        url="/can-bo-giao-vien"
+      />
       <Header />
       <Navigation />
-      
+
       <div className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
           <Breadcrumb

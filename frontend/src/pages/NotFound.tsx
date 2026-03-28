@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import { Home, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SEO } from "@/components/SEO";
 
 const NotFound = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center px-4">
+      <SEO title="404 - Không tìm thấy trang" noindex />
       <div className="max-w-2xl w-full text-center animate-fade-in">
         <div className="mb-8 animate-scale-in">
           <h1 className="text-9xl font-bold text-primary mb-4">404</h1>

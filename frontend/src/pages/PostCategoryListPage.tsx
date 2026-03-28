@@ -10,6 +10,7 @@ import { usePostsByCategory, useCategories } from "@/hooks/useApi";
 import { formatDate, type Category } from "@/lib/api";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { POST_CATEGORY_TEXT } from "@/constants/appText";
+import { SEO, collectionPageSchema } from "@/components/SEO";
 
 const CategoryList = () => {
   const { category } = useParams();
@@ -46,6 +47,16 @@ const CategoryList = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title={categoryTitle}
+        description={`Danh sách bài viết thuộc chuyên mục ${categoryTitle} - Trường THPT Lương Thúc Kỳ`}
+        url={`/chuyen-muc/${category}`}
+        jsonLd={collectionPageSchema(
+          categoryTitle,
+          `Bài viết thuộc chuyên mục ${categoryTitle}`,
+          `/chuyen-muc/${category}`
+        )}
+      />
       <Header />
       <Navigation />
       

@@ -15,6 +15,7 @@ import { useDocuments, useDownloadDocument } from "@/hooks/useApi";
 import { formatDate, formatFileSize } from "@/lib/api";
 import type { Document } from "@/lib/api";
 import { DOCUMENT_LIBRARY_TEXT } from "@/constants/appText";
+import { SEO, collectionPageSchema } from "@/components/SEO";
 
 const DocumentLibrary = () => {
   const [searchTerm, setSearchTerm] = useState<string | undefined>(undefined);
@@ -137,6 +138,16 @@ const DocumentLibrary = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Thư viện văn bản"
+        description="Thư viện văn bản, công văn, quyết định của Trường THPT Lương Thúc Kỳ. Tải xuống và xem trực tuyến các tài liệu giáo dục."
+        url="/thu-vien-van-ban"
+        jsonLd={collectionPageSchema(
+          "Thư viện văn bản",
+          "Văn bản, công văn, quyết định của Trường THPT Lương Thúc Kỳ",
+          "/thu-vien-van-ban"
+        )}
+      />
       <Header />
       <Navigation />
 

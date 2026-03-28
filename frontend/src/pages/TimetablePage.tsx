@@ -4,6 +4,7 @@ import Footer from '@/components/Footer';
 import { TimetableFilters } from '@/components/timetable/TimetableFilters';
 import { TimetableGrid } from '@/components/timetable/TimetableGrid';
 import { useSchoolYears, useSchoolClasses, useTimetable } from '@/hooks/useTimetable';
+import { SEO } from '@/components/SEO';
 
 export default function TimetablePage() {
   const { data: schoolYears, loading: yearsLoading } = useSchoolYears();
@@ -36,6 +37,11 @@ export default function TimetablePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Thời khóa biểu"
+        description="Thời khóa biểu các lớp học Trường THPT Lương Thúc Kỳ theo năm học."
+        url="/chuyen-muc/thoi-khoa-bieu"
+      />
       <Header />
       
       <main className="flex-1 container mx-auto py-8 px-4">

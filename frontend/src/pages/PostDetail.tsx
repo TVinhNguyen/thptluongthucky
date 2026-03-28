@@ -12,6 +12,7 @@ import { Calendar, User, Eye, Clock, ArrowRight } from "lucide-react";
 import { usePost, usePostsByCategory } from "@/hooks/useApi";
 import { formatDate, getMediaUrl } from "@/lib/api";
 import { prependMediaBaseUrl } from "@/lib/util";
+import { SEO, articleSchema } from "@/components/SEO";
 
 const PostDetail = () => {
   const { id } = useParams();
@@ -106,9 +107,19 @@ const PostDetail = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title={post.title}
+        description={post.summary || `${post.title} - ${post.category_name || "Tin tức"}`}
+        image={post.thumbnail ? getMediaUrl(post.thumbnail) : undefined}
+        url={`/bai-viet/${post.slug}`}
+        type="article"
+        publishedTime={post.published_at}
+        modifiedTime={post.updated_at}
+        jsonLd={articleSchema(post)}
+      />
       <Header />
       <Navigation />
-      
+
       <div className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
           <Breadcrumb
