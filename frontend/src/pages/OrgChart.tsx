@@ -65,7 +65,7 @@ const OrgChart = () => {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {viceLeadership.map((person, index) => (
                 <Card key={index} className="bg-card hover:shadow-card-hover transition-all hover-scale p-6 animate-fade-in shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
                   <div className="flex flex-col items-center text-center">
@@ -90,7 +90,7 @@ const OrgChart = () => {
           {/* Các phòng ban & tổ chuyên môn */}
           <section>
             <h2 className="text-2xl font-semibold text-foreground mb-4">Các phòng ban & Tổ chuyên môn</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {departments.map((dept: Department) => (
                 <DepartmentCard key={dept.id} dept={dept} />
               ))}

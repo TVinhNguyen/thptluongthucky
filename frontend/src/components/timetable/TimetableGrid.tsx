@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { TimetableCell } from './TimetableCell';
+import { Card } from '@/components/ui/card';
 import type { TimetableEntry } from '@/hooks/useTimetable';
 
 interface TimetableGridProps {
@@ -69,7 +70,8 @@ export function TimetableGrid({ entries, loading = false }: TimetableGridProps) 
   }
 
   return (
-    <div className="overflow-x-auto border rounded-lg bg-card shadow-sm">
+    <>
+      <div className="hidden md:block overflow-x-auto border rounded-lg bg-card shadow-sm">
       <table className="w-full border-collapse min-w-[800px]">
         <thead>
           <tr className="bg-muted/50">
@@ -148,5 +150,51 @@ export function TimetableGrid({ entries, loading = false }: TimetableGridProps) 
         </tbody>
       </table>
     </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {DAYS_OF_WEEK.map(day => {
+          const dayEntries = [...MORNING_PERIODS, ...AFTERNOON_PERIODS].map(period => ({
+            period,
+            time: getPeriodTime(period),
+            entry: getEntry(day.value, period),
+          })).filter(p => p.entry);
+          if (dayEntries.length === 0) return null;
+          return (
+            <Card key={day.value} className="overflow-hidden shadow-sm">
+              <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
+                {day.label}
+              </div>
+              <div className="divide-y divide-border">
+                {dayEntries.map(({ period, time, entry }) => (
+                  <div key={period} className="p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                        Tiet {period}
+                        <br />
+                        {time}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{entry.subject_name}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {entry.teacher_name && <span>GV: {entry.teacher_name}</span>}
+                          {entry.teacher_name && entry.room && <span> - </span>}
+                          {entry.room && <span>Phong: {entry.room}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </>
   );
 }
+
+
+
+
+
