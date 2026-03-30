@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Header from '@/components/Header';
+import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import Breadcrumb from '@/components/Breadcrumb';
 import { TimetableFilters } from '@/components/timetable/TimetableFilters';
 import { TimetableGrid } from '@/components/timetable/TimetableGrid';
 import { useSchoolYears, useSchoolClasses, useTimetable } from '@/hooks/useTimetable';
@@ -43,8 +45,11 @@ export default function TimetablePage() {
         url="/chuyen-muc/thoi-khoa-bieu"
       />
       <Header />
+      <Navigation />
       
       <main className="flex-1 container mx-auto py-8 px-4">
+        <Breadcrumb items={[{ label: 'Thời khóa biểu' }]} />
+
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground mb-2">Thời Khóa Biểu</h1>

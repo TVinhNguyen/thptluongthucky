@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Search } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { HEADER_TEXT } from "@/constants/appText";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 const Header = () => {
   const topMenuItems = HEADER_TEXT.topMenuItems;
   const navigate = useNavigate();
   const location = useLocation();
   const [searchInput, setSearchInput] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const currentQuery = useMemo(() => {
     if (location.pathname !== "/tim-kiem") return "";
     const params = new URLSearchParams(location.search);
@@ -26,6 +28,7 @@ const Header = () => {
     event.preventDefault();
     const query = searchInput.trim();
     if (!query) return;
+    setMobileMenuOpen(false);
     navigate(`/tim-kiem?q=${encodeURIComponent(query)}`);
   };
 
@@ -54,7 +57,44 @@ const Header = () => {
               ))}
             </div>
 
-            <form onSubmit={handleSubmit} className="relative max-w-xs">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden text-primary-foreground">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="top" className="bg-primary text-primary-foreground border-b">
+                <SheetHeader>
+                  <SheetTitle className="text-primary-foreground">Menu</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-2 mt-4">
+                  {topMenuItems.map((item) => (
+                    <Button key={item.label} variant="ghost" asChild className="justify-start" onClick={() => setMobileMenuOpen(false)}>
+                      <Link to={item.href}>{item.label}</Link>
+                    </Button>
+                  ))}
+                </div>
+                <form onSubmit={handleSubmit} className="relative mt-4 md:hidden">
+                  <Input
+                    type="search"
+                    placeholder={HEADER_TEXT.searchPlaceholder}
+                    className="bg-card text-foreground pr-10 h-9"
+                    value={searchInput}
+                    onChange={(event) => setSearchInput(event.target.value)}
+                  />
+                  <Button
+                    type="submit"
+                    size="icon"
+                    variant="ghost"
+                    className="absolute right-0 top-0 h-9 w-9 text-muted-foreground hover:text-foreground"
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </form>
+              </SheetContent>
+            </Sheet>
+
+            <form onSubmit={handleSubmit} className="relative max-w-xs hidden md:block">
               <Input
                 type="search"
                 placeholder={HEADER_TEXT.searchPlaceholder}
@@ -79,3 +119,5 @@ const Header = () => {
 };
 
 export default Header;
+
+

@@ -76,7 +76,7 @@ const DocumentLibrary = () => {
       {docs.map((doc) => (
         <div
           key={doc.id}
-          className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-all hover-scale group animate-fade-in"
+          className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-all hover-scale group animate-fade-in"
         >
           <div className="flex items-center gap-3 flex-1">
             <FileText className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
@@ -88,14 +88,18 @@ const DocumentLibrary = () => {
               <p className="text-sm text-muted-foreground">
                 {formatDate(doc.published_date || doc.created_at)}
                 {doc.file_size ? ` • ${formatFileSize(doc.file_size)}` : ""}
-                {doc.signer ? ` • ${doc.signer}` : ""}
-                {doc.download_count > 0
-                  ? ` • ${doc.download_count} ${DOCUMENT_LIBRARY_TEXT.downloadCountLabel}`
-                  : ""}
+                {doc.signer ? (
+                  <span className="hidden sm:inline"> {` • ${doc.signer}`}</span>
+                ) : null}
+                {doc.download_count > 0 ? (
+                  <span className="hidden sm:inline">
+                    {` • ${doc.download_count} ${DOCUMENT_LIBRARY_TEXT.downloadCountLabel}`}
+                  </span>
+                ) : null}
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-2 sm:mt-0 shrink-0">
             <Button
               variant="ghost"
               size="sm"
@@ -248,3 +252,4 @@ const DocumentLibrary = () => {
 };
 
 export default DocumentLibrary;
+

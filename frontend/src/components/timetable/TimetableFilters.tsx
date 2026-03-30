@@ -64,10 +64,10 @@ export function TimetableFilters({
   }, [selectedGrade, setSelectedClass]);
 
   return (
-    <div className="flex flex-wrap gap-3 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
       {/* Grade Filter */}
       <Select value={selectedGrade} onValueChange={setSelectedGrade}>
-        <SelectTrigger className="w-[140px]">
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Khối lớp" />
         </SelectTrigger>
         <SelectContent>
@@ -84,7 +84,7 @@ export function TimetableFilters({
         onValueChange={setSelectedClass}
         disabled={!selectedGrade || selectedGrade === 'all'}
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Chọn lớp" />
         </SelectTrigger>
         <SelectContent>
@@ -99,7 +99,7 @@ export function TimetableFilters({
 
       {/* School Year Filter */}
       <Select value={selectedYear} onValueChange={setSelectedYear}>
-        <SelectTrigger className="w-[200px]">
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Năm học" />
         </SelectTrigger>
         <SelectContent>
@@ -113,3 +113,4 @@ export function TimetableFilters({
     </div>
   );
 }
+
