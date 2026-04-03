@@ -112,9 +112,19 @@ const PostDetail = () => {
         description={post.summary || `${post.title} - ${post.category_name || "Tin tức"}`}
         image={post.thumbnail ? getMediaUrl(post.thumbnail) : undefined}
         url={`/bai-viet/${post.slug}`}
+        ogImageAlt={post.title}
         type="article"
         publishedTime={post.published_at}
         modifiedTime={post.updated_at}
+        author="Trường THPT Lương Thúc Kỳ"
+        keywords={[
+          post.category_name || "tin tức",
+          ...post.title
+            .split(" ")
+            .map((part) => part.trim())
+            .filter((part) => part.length > 2)
+            .slice(0, 4),
+        ]}
         jsonLd={articleSchema(post)}
       />
       <Header />

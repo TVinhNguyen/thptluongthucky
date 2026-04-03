@@ -16,6 +16,14 @@ const VideoListPage = () => {
 
   const { data, isLoading, error } = useVideos(currentPage);
   const totalPages = data ? Math.ceil(data.count / 10) : 0;
+  const baseUrl = "/chuyen-muc/video";
+  const seoUrl = currentPage > 1 ? `${baseUrl}?page=${currentPage}` : baseUrl;
+  const prevUrl = currentPage > 2
+    ? `${baseUrl}?page=${currentPage - 1}`
+    : currentPage === 2
+      ? baseUrl
+      : undefined;
+  const nextUrl = data?.next ? `${baseUrl}?page=${currentPage + 1}` : undefined;
 
   const handlePageChange = (page: number) => {
     setSearchParams({ page: page.toString() });
@@ -27,7 +35,10 @@ const VideoListPage = () => {
       <SEO
         title="Thư viện video"
         description="Thư viện video hoạt động của Trường THPT Lương Thúc Kỳ."
-        url="/chuyen-muc/video"
+        url={seoUrl}
+        canonical={seoUrl}
+        prevUrl={prevUrl}
+        nextUrl={nextUrl}
         jsonLd={collectionPageSchema("Thư viện video", "Video hoạt động của Trường THPT Lương Thúc Kỳ", "/chuyen-muc/video")}
       />
       <Header />

@@ -11,38 +11,69 @@ interface SEOProps {
   description?: string;
   image?: string;
   url?: string;
+  canonical?: string;
   type?: "website" | "article";
   publishedTime?: string;
   modifiedTime?: string;
   noindex?: boolean;
+  keywords?: string[];
+  locale?: string;
+  ogImageAlt?: string;
+  ogImageWidth?: number;
+  ogImageHeight?: number;
+  twitterSite?: string;
+  author?: string;
+  prevUrl?: string;
+  nextUrl?: string;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
+
+const DEFAULT_ROBOTS = "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1";
+
+const toAbsoluteUrl = (value: string) => {
+  if (value.startsWith("http://") || value.startsWith("https://")) {
+    return value;
+  }
+  return `${SITE_URL}${value.startsWith("/") ? value : `/${value}`}`;
+};
 
 export const SEO = ({
   title,
   description = DEFAULT_DESCRIPTION,
   image,
   url,
+  canonical,
   type = "website",
   publishedTime,
   modifiedTime,
   noindex = false,
+  keywords,
+  locale = "vi_VN",
+  ogImageAlt,
+  ogImageWidth,
+  ogImageHeight,
+  twitterSite = "@thptluongthucky",
+  author,
+  prevUrl,
+  nextUrl,
   jsonLd,
 }: SEOProps) => {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME;
-  const fullImage = image
-    ? image.startsWith("http")
-      ? image
-      : `${SITE_URL}${image}`
-    : `${SITE_URL}${DEFAULT_IMAGE}`;
-  const fullUrl = url ? `${SITE_URL}${url}` : SITE_URL;
+  const fullImage = image ? toAbsoluteUrl(image) : `${SITE_URL}${DEFAULT_IMAGE}`;
+  const fullUrl = url ? toAbsoluteUrl(url) : SITE_URL;
+  const canonicalUrl = canonical ? toAbsoluteUrl(canonical) : fullUrl;
+  const robotsContent = noindex ? "noindex, nofollow" : DEFAULT_ROBOTS;
 
   return (
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
-      {noindex && <meta name="robots" content="noindex, nofollow" />}
-      <link rel="canonical" href={fullUrl} />
+      <meta name="robots" content={robotsContent} />
+      {keywords?.length ? <meta name="keywords" content={keywords.join(", ")} /> : null}
+      {author ? <meta name="author" content={author} /> : null}
+      <link rel="canonical" href={canonicalUrl} />
+      {prevUrl ? <link rel="prev" href={toAbsoluteUrl(prevUrl)} /> : null}
+      {nextUrl ? <link rel="next" href={toAbsoluteUrl(nextUrl)} /> : null}
 
       {/* Open Graph */}
       <meta property="og:site_name" content={SITE_NAME} />
@@ -51,7 +82,11 @@ export const SEO = ({
       <meta property="og:type" content={type} />
       <meta property="og:url" content={fullUrl} />
       <meta property="og:image" content={fullImage} />
-      <meta property="og:locale" content="vi_VN" />
+      <meta property="og:image:secure_url" content={fullImage} />
+      {ogImageAlt ? <meta property="og:image:alt" content={ogImageAlt} /> : null}
+      {ogImageWidth ? <meta property="og:image:width" content={`${ogImageWidth}`} /> : null}
+      {ogImageHeight ? <meta property="og:image:height" content={`${ogImageHeight}`} /> : null}
+      <meta property="og:locale" content={locale} />
 
       {/* Article-specific OG */}
       {type === "article" && publishedTime && (
@@ -60,12 +95,17 @@ export const SEO = ({
       {type === "article" && modifiedTime && (
         <meta property="article:modified_time" content={modifiedTime} />
       )}
+      {type === "article" && author && (
+        <meta property="article:author" content={author} />
+      )}
 
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content={twitterSite} />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={fullImage} />
+      {ogImageAlt ? <meta name="twitter:image:alt" content={ogImageAlt} /> : null}
 
       {/* JSON-LD Structured Data */}
       {jsonLd && (
@@ -90,6 +130,21 @@ export function organizationSchema() {
     address: {
       "@type": "PostalAddress",
       addressCountry: "VN",
+    },
+  };
+}
+
+export function websiteSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: SITE_URL,
+    inLanguage: "vi-VN",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${SITE_URL}/tim-kiem?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
     },
   };
 }

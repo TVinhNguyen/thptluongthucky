@@ -140,9 +140,11 @@ const AboutPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title={mainPage.title}
-        description={`${mainPage.title} - Giới thiệu về Trường THPT Lương Thúc Kỳ`}
-        url="/gioi-thieu"
+        title={mainPage.title || "Giới thiệu"}
+        description={mainPage.title ? `${mainPage.title} - Giới thiệu Trường THPT Lương Thúc Kỳ` : "Giới thiệu về Trường THPT Lương Thúc Kỳ - Sứ mệnh, tầm nhìn, giá trị cốt lõi và lịch sử phát triển."}
+        url={pageSlug && pageSlug !== "gioi-thieu" ? `/gioi-thieu/${pageSlug}` : "/gioi-thieu"}
+        canonical={pageSlug && pageSlug !== "gioi-thieu" ? `/gioi-thieu/${pageSlug}` : "/gioi-thieu"}
+        keywords={["giới thiệu", "sứ mệnh", "tầm nhìn", "giá trị cốt lõi", pageSlug || ""]}
       />
       <Header />
       <Navigation />
