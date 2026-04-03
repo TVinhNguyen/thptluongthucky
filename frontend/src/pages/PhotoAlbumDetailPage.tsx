@@ -84,6 +84,9 @@ const PhotoAlbumDetailPage = () => {
           description={data.description || `Album ảnh ${data.name} - Trường THPT Lương Thúc Kỳ`}
           image={data.cover_image_url || undefined}
           url={`/chuyen-muc/anh/${slug}`}
+          canonical={`/chuyen-muc/anh/${slug}`}
+          ogImageAlt={data.name}
+          keywords={["ảnh", data.name, "album ảnh"]}
           jsonLd={imageGallerySchema(data)}
         />
       )}
@@ -95,7 +98,7 @@ const PhotoAlbumDetailPage = () => {
           <Breadcrumb
             items={[
               { label: "Chuyên mục", href: "/" },
-              { label: "Ảnh", href: "/anh" },
+              { label: "Ảnh", href: "/chuyen-muc/anh" },
               { label: data?.name || "Chi tiết album" },
             ]}
           />

@@ -26,8 +26,10 @@ const OrgChart = () => {
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Cơ cấu tổ chức"
-        description="Cơ cấu tổ chức Trường THPT Lương Thúc Kỳ - Ban giám hiệu, các phòng ban và tổ chuyên môn."
+        description="Cơ cấu tổ chức Trường THPT Lương Thúc Kỳ - Ban giám hiệu, phòng ban, tổ chuyên môn và thông tin liên hệ."
         url="/co-cau-to-chuc"
+        canonical="/co-cau-to-chuc"
+        keywords={["cơ cấu tổ chức", "ban giám hiệu", "phòng ban", "tổ chuyên môn"]}
       />
       <Header />
       <Navigation />

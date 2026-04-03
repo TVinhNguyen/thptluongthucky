@@ -155,8 +155,10 @@ const SearchAll = () => {
     <div className="min-h-screen flex flex-col">
       <SEO
         title={query ? `Tìm kiếm: ${query}` : "Tìm kiếm"}
-        description={`Kết quả tìm kiếm ${query ? `cho "${query}"` : ""} trên Trường THPT Lương Thúc Kỳ`}
+        description={`Kết quả tìm kiếm ${query ? `"${query}"` : ""} - Bài viết, văn bản, ảnh, video trên Trường THPT Lương Thúc Kỳ`}
         url={`/tim-kiem${query ? `?q=${encodeURIComponent(query)}` : ""}`}
+        canonical={`/tim-kiem${query ? `?q=${encodeURIComponent(query)}` : ""}`}
+        keywords={query ? [query, "tìm kiếm", "bài viết", "văn bản"] : ["tìm kiếm"]}
         noindex
       />
       <Header />

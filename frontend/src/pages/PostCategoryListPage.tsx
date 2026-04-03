@@ -39,18 +39,61 @@ const CategoryList = () => {
   const categoryTitle = categoryNames[category || ""] || category?.replace(/-/g, " ") || "Danh sách";
 
   const handlePageChange = (page: number) => {
-    setSearchParams({ page: page.toString() });
+    const nextParams = new URLSearchParams();
+    nextParams.set("page", page.toString());
+    if (searchKeywords) {
+      nextParams.set("search", searchKeywords);
+    }
+    setSearchParams(nextParams);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const totalPages = data ? Math.ceil(data.count / 10) : 0;
+  const categoryBaseUrl = `/chuyen-muc/${category}`;
+  const categoryQueryParams = new URLSearchParams();
+  if (searchKeywords) {
+    categoryQueryParams.set("search", searchKeywords);
+  }
+  if (currentPage > 1) {
+    categoryQueryParams.set("page", String(currentPage));
+  }
+  const seoUrl = categoryQueryParams.toString()
+    ? `${categoryBaseUrl}?${categoryQueryParams.toString()}`
+    : categoryBaseUrl;
+
+  const prevQueryParams = new URLSearchParams();
+  if (searchKeywords) {
+    prevQueryParams.set("search", searchKeywords);
+  }
+  if (currentPage > 2) {
+    prevQueryParams.set("page", String(currentPage - 1));
+  }
+  const prevUrl = currentPage > 1
+    ? (prevQueryParams.toString()
+      ? `${categoryBaseUrl}?${prevQueryParams.toString()}`
+      : categoryBaseUrl)
+    : undefined;
+
+  const nextQueryParams = new URLSearchParams();
+  if (searchKeywords) {
+    nextQueryParams.set("search", searchKeywords);
+  }
+  if (data?.next) {
+    nextQueryParams.set("page", String(currentPage + 1));
+  }
+  const nextUrl = data?.next
+    ? `${categoryBaseUrl}?${nextQueryParams.toString()}`
+    : undefined;
 
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
         title={categoryTitle}
         description={`Danh sách bài viết thuộc chuyên mục ${categoryTitle} - Trường THPT Lương Thúc Kỳ`}
-        url={`/chuyen-muc/${category}`}
+        url={seoUrl}
+        canonical={seoUrl}
+        prevUrl={prevUrl}
+        nextUrl={nextUrl}
         jsonLd={collectionPageSchema(
           categoryTitle,
           `Bài viết thuộc chuyên mục ${categoryTitle}`,
