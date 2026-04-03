@@ -74,8 +74,10 @@ const Staff = () => {
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Cán bộ - Giáo viên"
-        description="Danh sách cán bộ, giáo viên Trường THPT Lương Thúc Kỳ."
+        description="Danh sách cán bộ giáo viên Trường THPT Lương Thúc Kỳ - Thông tin chi tiết theo phòng ban và chuyên môn."
         url="/can-bo-giao-vien"
+        canonical="/can-bo-giao-vien"
+        keywords={["cán bộ", "giáo viên", "đội ngũ", selectedDepartment !== "all" && departments?.find(d => d.id.toString() === selectedDepartment)?.name].filter(Boolean)}
       />
       <Header />
       <Navigation />

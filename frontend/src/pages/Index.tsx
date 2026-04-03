@@ -5,14 +5,15 @@ import LeftSidebar from "@/components/LeftSidebar";
 import MainContent from "@/components/MainContent";
 import RightSidebar from "@/components/RightSidebar";
 import Footer from "@/components/Footer";
-import { SEO, organizationSchema } from "@/components/SEO";
+import { SEO, organizationSchema, websiteSchema } from "@/components/SEO";
 
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
         url="/"
-        jsonLd={organizationSchema()}
+        ogImageAlt="Logo Trường THPT Lương Thúc Kỳ"
+        jsonLd={[organizationSchema(), websiteSchema()]}
       />
       <Header />
       <Hero />

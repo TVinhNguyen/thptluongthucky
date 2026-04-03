@@ -15,6 +15,7 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.clickjacking import xframe_options_exempt
 import logging
 import requests
+import html
 
 from .models import (
     Category, Post, Page, Document, Department, Staff,
@@ -663,7 +664,7 @@ def sitemap_xml(request):
   </url>""")
 
     # Published posts
-    posts = Post.objects.filter(status='published').order_by('-published_at')[:500]
+    posts = Post.objects.filter(status='PUBLISHED').order_by('-published_at')[:500]
     for post in posts:
         lastmod = (post.updated_at or post.published_at).strftime("%Y-%m-%d")
         urls.append(f"""  <url>
@@ -674,7 +675,7 @@ def sitemap_xml(request):
   </url>""")
 
     # Categories
-    categories = Category.objects.all()
+    categories = Category.objects.exclude(slug__in=['anh', 'video', 'thoi-khoa-bieu'])
     for cat in categories:
         urls.append(f"""  <url>
     <loc>{SITE_URL}/chuyen-muc/{cat.slug}</loc>
@@ -722,33 +723,49 @@ STATIC_PAGE_META = {
 
 
 def _build_meta_html(title, description, image, url, og_type="website",
-                     published_time=None, json_ld=None):
+                     published_time=None, json_ld=None, noindex=False,
+                     og_image_alt=None):
     """Build a minimal HTML page with correct meta tags for bot crawlers."""
     import json as json_mod
+
+    escaped_title = html.escape(title or "")
+    escaped_description = html.escape(description or "")
+    escaped_image = html.escape(image or "")
+    escaped_url = html.escape(url or "")
+    escaped_og_type = html.escape(og_type or "website")
+    escaped_image_alt = html.escape(og_image_alt or title or DEFAULT_OG_TITLE)
+    robots_content = "noindex, nofollow" if noindex else "index, follow"
+
     meta = f"""<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8"/>
-<title>{title}</title>
-<meta name="description" content="{description}"/>
-<link rel="canonical" href="{url}"/>
+<title>{escaped_title}</title>
+<meta name="description" content="{escaped_description}"/>
+<meta name="robots" content="{robots_content}"/>
+<link rel="canonical" href="{escaped_url}"/>
 <meta property="og:site_name" content="{DEFAULT_OG_TITLE}"/>
-<meta property="og:title" content="{title}"/>
-<meta property="og:description" content="{description}"/>
-<meta property="og:type" content="{og_type}"/>
-<meta property="og:url" content="{url}"/>
-<meta property="og:image" content="{image}"/>
+<meta property="og:title" content="{escaped_title}"/>
+<meta property="og:description" content="{escaped_description}"/>
+<meta property="og:type" content="{escaped_og_type}"/>
+<meta property="og:url" content="{escaped_url}"/>
+<meta property="og:image" content="{escaped_image}"/>
+<meta property="og:image:secure_url" content="{escaped_image}"/>
+<meta property="og:image:alt" content="{escaped_image_alt}"/>
 <meta property="og:locale" content="vi_VN"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="{title}"/>
-<meta name="twitter:description" content="{description}"/>
-<meta name="twitter:image" content="{image}"/>"""
+<meta name="twitter:site" content="@thptluongthucky"/>
+<meta name="twitter:title" content="{escaped_title}"/>
+<meta name="twitter:description" content="{escaped_description}"/>
+<meta name="twitter:image" content="{escaped_image}"/>
+<meta name="twitter:image:alt" content="{escaped_image_alt}"/>"""
 
     if published_time:
         meta += f'\n<meta property="article:published_time" content="{published_time}"/>'
 
     if json_ld:
-        meta += f'\n<script type="application/ld+json">{json_mod.dumps(json_ld, ensure_ascii=False)}</script>'
+        safe_json_ld = json_mod.dumps(json_ld, ensure_ascii=False).replace("</", "<\\/")
+        meta += f'\n<script type="application/ld+json">{safe_json_ld}</script>'
 
     meta += """
 </head>
@@ -771,7 +788,7 @@ def prerender_bot(request, url_path=""):
     if post_match:
         slug = post_match.group(1)
         try:
-            post = Post.objects.select_related('category').get(slug=slug, status='published')
+            post = Post.objects.select_related('category').get(slug=slug, status='PUBLISHED')
             title = f"{post.title} | {DEFAULT_OG_TITLE}"
             desc = post.summary or post.title
             image = request.build_absolute_uri(post.thumbnail.url) if post.thumbnail else DEFAULT_OG_IMAGE
@@ -831,7 +848,24 @@ def prerender_bot(request, url_path=""):
         html = _build_meta_html(title, desc, DEFAULT_OG_IMAGE, f"{SITE_URL}{path}")
         return HttpResponse(html, content_type="text/html")
 
-    # Fallback: default meta
-    html = _build_meta_html(DEFAULT_OG_TITLE, DEFAULT_OG_DESC, DEFAULT_OG_IMAGE, f"{SITE_URL}{path}")
+    # 5. Document library tabs: /thu-vien-van-ban/<type>
+    doc_type_match = _re.match(r'^/thu-vien-van-ban/([^/]+)/?$', path)
+    if doc_type_match:
+        doc_type = doc_type_match.group(1).lower()
+        doc_type_title_map = {
+            'cong-van': 'Công văn',
+            'quyet-dinh': 'Quyết định',
+            'cong_van': 'Công văn',
+            'quyet_dinh': 'Quyết định',
+        }
+        if doc_type in doc_type_title_map:
+            tab_name = doc_type_title_map[doc_type]
+            title = f"Thư viện văn bản - {tab_name} | {DEFAULT_OG_TITLE}"
+            desc = f"Danh sách {tab_name.lower()} của Trường THPT Lương Thúc Kỳ."
+            html = _build_meta_html(title, desc, DEFAULT_OG_IMAGE, f"{SITE_URL}{path}")
+            return HttpResponse(html, content_type="text/html")
+
+    # Fallback: noindex to prevent unknown URLs from being indexed as soft-404 pages.
+    html = _build_meta_html(DEFAULT_OG_TITLE, DEFAULT_OG_DESC, DEFAULT_OG_IMAGE, f"{SITE_URL}{path}", noindex=True)
     return HttpResponse(html, content_type="text/html")
 

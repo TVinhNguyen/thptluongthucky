@@ -146,6 +146,9 @@ const DocumentLibrary = () => {
         title="Thư viện văn bản"
         description="Thư viện văn bản, công văn, quyết định của Trường THPT Lương Thúc Kỳ. Tải xuống và xem trực tuyến các tài liệu giáo dục."
         url="/thu-vien-van-ban"
+        canonical="/thu-vien-van-ban"
+        ogImageAlt="Thư viện văn bản Trường THPT Lương Thúc Kỳ"
+        keywords={["văn bản", "công văn", "quyết định", "tài liệu giáo dục", type || ""].filter(Boolean)}
         jsonLd={collectionPageSchema(
           "Thư viện văn bản",
           "Văn bản, công văn, quyết định của Trường THPT Lương Thúc Kỳ",

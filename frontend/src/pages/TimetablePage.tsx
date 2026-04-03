@@ -41,8 +41,10 @@ export default function TimetablePage() {
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Thời khóa biểu"
-        description="Thời khóa biểu các lớp học Trường THPT Lương Thúc Kỳ theo năm học."
+        description="Thời khóa biểu chi tiết các lớp học Trường THPT Lương Thúc Kỳ - Lịch học theo năm học và khối lớp."
         url="/chuyen-muc/thoi-khoa-bieu"
+        canonical="/chuyen-muc/thoi-khoa-bieu"
+        keywords={["thời khóa biểu", "lịch học", "lịch biểu", "năm học"]}
       />
       <Header />
       <Navigation />
