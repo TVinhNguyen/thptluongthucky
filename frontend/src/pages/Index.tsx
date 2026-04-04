@@ -5,7 +5,6 @@ import LeftSidebar from "@/components/LeftSidebar";
 import MainContent from "@/components/MainContent";
 import RightSidebar from "@/components/RightSidebar";
 import Footer from "@/components/Footer";
-import ScrollToTop from "@/components/ScrollToTop";
 import { SEO, organizationSchema, websiteSchema } from "@/components/SEO";
 
 const Index = () => {
@@ -42,7 +41,6 @@ const Index = () => {
       </div>
 
       <Footer />
-      <ScrollToTop />
     </div>
   );
 };

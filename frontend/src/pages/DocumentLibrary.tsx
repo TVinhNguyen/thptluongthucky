@@ -227,8 +227,29 @@ const DocumentLibrary = () => {
                 </div>
 
                 <div className="p-6">
-                  {/* 1 content dùng chung cho mọi tab */}
-                  <TabsContent value={activeTab} className="mt-0">
+                  <TabsContent value="all" className="mt-0">
+                    {isLoading ? (
+                      <LoadingSkeleton />
+                    ) : documents.length > 0 ? (
+                      <DocumentList docs={documents} />
+                    ) : (
+                      <p className="text-center text-muted-foreground py-8">
+                        {DOCUMENT_LIBRARY_TEXT.empty}
+                      </p>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="CONG_VAN" className="mt-0">
+                    {isLoading ? (
+                      <LoadingSkeleton />
+                    ) : documents.length > 0 ? (
+                      <DocumentList docs={documents} />
+                    ) : (
+                      <p className="text-center text-muted-foreground py-8">
+                        {DOCUMENT_LIBRARY_TEXT.empty}
+                      </p>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="QUYET_DINH" className="mt-0">
                     {isLoading ? (
                       <LoadingSkeleton />
                     ) : documents.length > 0 ? (

@@ -45,9 +45,9 @@ const VideoListPage = () => {
           ...(data?.results?.map((v: Video) => videoObjectSchema({
             title: v.title,
             description: v.description,
-            thumbnail: v.thumbnail,
+            thumbnail: typeof v.thumbnail === "string" ? v.thumbnail : v.thumbnail?.url,
             video_url: v.video_url,
-            video_file: v.video_file,
+            video_file: typeof v.video_file === "string" ? v.video_file : v.video_file?.url,
             created_at: v.created_at,
           })) ?? []),
         ]}
@@ -81,8 +81,10 @@ const VideoListPage = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {data.results.map((v: Video) => {
-                  const videoLink = v.video_url || v.video_file?.url || v.video_file;
-                  const thumb = v.thumbnail?.url || v.thumbnail;
+                  const videoFileUrl = typeof v.video_file === "string" ? v.video_file : v.video_file?.url;
+                  const thumbnailUrl = typeof v.thumbnail === "string" ? v.thumbnail : v.thumbnail?.url;
+                  const videoLink = v.video_url || videoFileUrl;
+                  const thumb = thumbnailUrl;
 
                   return (
                     <div key={v.id} className="rounded-xl border bg-card overflow-hidden">
@@ -96,7 +98,7 @@ const VideoListPage = () => {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                            No thumbnail
+                            Chưa có ảnh
                           </div>
                         )}
 

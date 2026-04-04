@@ -65,12 +65,12 @@ export const DocumentViewer = ({ document, open, onOpenChange }: DocumentViewerP
         </DialogHeader>
 
         <div className="flex-1 space-y-3 overflow-y-auto">
-          <div className="flex items-center justify-between text-sm text-gray-600 px-4">
-            <span>File size: {document.formatted_file_size}</span>
+          <div className="flex items-center justify-between text-sm text-muted-foreground px-4">
+            <span>Kích thước: {document.formatted_file_size}</span>
             <a href={fileUrl} download={document.title} target="_blank" rel="noreferrer">
               <Button size="sm" variant="outline">
                 <Download className="w-4 h-4 mr-2" />
-                Download
+                Tải xuống
               </Button>
             </a>
           </div>
@@ -99,7 +99,7 @@ export const DocumentViewer = ({ document, open, onOpenChange }: DocumentViewerP
                 <div className="h-[600px] flex items-center justify-center">
                   <div className="text-center">
                     <div className="inline-block animate-spin mb-2">⏳</div>
-                    <p className="text-sm text-gray-600">Loading document...</p>
+                    <p className="text-sm text-muted-foreground">Đang tải tài liệu...</p>
                   </div>
                 </div>
               )}
@@ -109,7 +109,7 @@ export const DocumentViewer = ({ document, open, onOpenChange }: DocumentViewerP
                 onLoad={() => setLoading(false)}
                 onError={() => {
                   setLoading(false);
-                  setError("Unable to preview this file. Please download it to view.");
+                  setError("Không thể xem trước tài liệu này. Vui lòng tải xuống để xem.");
                 }}
                 allowFullScreen
                 title={document.title}
@@ -132,7 +132,7 @@ export const DocumentViewer = ({ document, open, onOpenChange }: DocumentViewerP
               <Alert>
                 <AlertCircle className="w-4 h-4" />
                 <AlertDescription>
-                  File type (.{fileExt}) not supported for preview. Please download to view.
+                  Loại file .{fileExt} không hỗ trợ xem trước. Vui lòng tải xuống để xem.
                 </AlertDescription>
               </Alert>
             </div>
@@ -164,7 +164,7 @@ const TextFileViewer = ({ url, onLoad, onError }: TextFileViewerProps) => {
         setFetchError(null);
         onLoad();
       } catch (err) {
-        setFetchError("Unable to load text file");
+        setFetchError("Không thể tải file văn bản");
         onError();
       } finally {
         setLoading(false);
@@ -178,7 +178,7 @@ const TextFileViewer = ({ url, onLoad, onError }: TextFileViewerProps) => {
       <div className="h-[600px] flex items-center justify-center bg-gray-50 border rounded mx-4">
         <div className="text-center">
           <div className="inline-block animate-spin mb-2">⏳</div>
-          <p className="text-sm text-gray-600">Loading text file...</p>
+          <p className="text-sm text-muted-foreground">Đang tải file văn bản...</p>
         </div>
       </div>
     );

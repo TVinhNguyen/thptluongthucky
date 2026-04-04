@@ -170,7 +170,7 @@ export function TimetableGrid({ entries, loading = false }: TimetableGridProps) 
                   <div key={period} className="p-3">
                     <div className="flex items-start gap-3">
                       <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-                        Tiet {period}
+                        Tiết {period}
                         <br />
                         {time}
                       </div>
@@ -179,7 +179,7 @@ export function TimetableGrid({ entries, loading = false }: TimetableGridProps) 
                         <div className="text-xs text-muted-foreground mt-0.5">
                           {entry.teacher_name && <span>GV: {entry.teacher_name}</span>}
                           {entry.teacher_name && entry.room && <span> - </span>}
-                          {entry.room && <span>Phong: {entry.room}</span>}
+                          {entry.room && <span>Phòng: {entry.room}</span>}
                         </div>
                       </div>
                     </div>
