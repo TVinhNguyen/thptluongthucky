@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { usePhotoAlbum } from "@/hooks/useApi";
 import { formatDate, type Photo } from "@/lib/api";
 import { X, ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
-import { SEO, imageGallerySchema } from "@/components/SEO";
+import { SEO, imageGallerySchema, breadcrumbSchema } from "@/components/SEO";
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
@@ -87,7 +87,13 @@ const PhotoAlbumDetailPage = () => {
           canonical={`/chuyen-muc/anh/${slug}`}
           ogImageAlt={data.name}
           keywords={["ảnh", data.name, "album ảnh"]}
-          jsonLd={imageGallerySchema(data)}
+          jsonLd={[
+            imageGallerySchema(data),
+            breadcrumbSchema([
+              { label: "Thư viện ảnh", href: "/chuyen-muc/anh" },
+              { label: data.name },
+            ]),
+          ]}
         />
       )}
       <Header />

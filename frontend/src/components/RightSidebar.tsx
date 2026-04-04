@@ -7,23 +7,23 @@ const RightSidebar = () => {
   const { data: siteSettings } = useSiteSettings();
 
   const defaultLinks = [
-    { title: "Chinh quyen dien tu thanh pho", url: "https://egov.danang.gov.vn/", icon: "../../public/DNG_icon.png" },
-    { title: "Cong thong tin Chinh phu", url: "https://chinhphu.vn", icon: "https://datafiles.chinhphu.vn/cpp/1/Logo/quoc-huy.png" },
-    { title: "Bo Giao duc va Dao tao", url: "https://moet.gov.vn", icon: "https://datafiles.chinhphu.vn/cpp/1/Logo/quoc-huy.png" },
-    { title: "So GD&DT", url: "https://danang.edu.vn/", icon: "../../public/sogdlogo.png" },
-    { title: "Cong dich vu cong", url: "#", icon: "../../public/hop-tructuyen.png" },
+    { title: "Chính quyền điện tử thành phố", url: "https://egov.danang.gov.vn/", icon: "/DNG_icon.png" },
+    { title: "Cổng thông tin Chính phủ", url: "https://chinhphu.vn", icon: "https://datafiles.chinhphu.vn/cpp/1/Logo/quoc-huy.png" },
+    { title: "Bộ Giáo dục và Đào tạo", url: "https://moet.gov.vn", icon: "https://datafiles.chinhphu.vn/cpp/1/Logo/quoc-huy.png" },
+    { title: "Sở GD&ĐT Đà Nẵng", url: "https://danang.edu.vn/", icon: "/sogdlogo.png" },
+    { title: "Cổng dịch vụ công", url: "#", icon: "/hop-tructuyen.png" },
   ];
 
   const links = externalLinks && externalLinks.length > 0 ? externalLinks : defaultLinks;
-  const quoteTitle = siteSettings?.quote_title || "L?i Ch? t?ch H? Ch� Minh";
+  const quoteTitle = siteSettings?.quote_title || "Lời Chủ tịch Hồ Chí Minh";
   const quoteContent =
-    siteSettings?.quote_content || '"V� l?i �ch mu?i nam ph?i tr?ng c�y, v� l?i �ch tram nam ph?i tr?ng ngu?i"';
-  const quoteAuthor = siteSettings?.quote_author || "H? Ch� Minh";
+    siteSettings?.quote_content || '"Vì lợi ích mười năm phải trồng cây, vì lợi ích trăm năm phải trồng người"';
+  const quoteAuthor = siteSettings?.quote_author || "Hồ Chí Minh";
 
   return (
     <aside className="space-y-6">
-      <Card className="bg-card hover:shadow-card-hover transition-all hover-scale overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)] animate-fade-in">
-        <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">Chinh phu dien tu</div>
+      <Card className="bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)] animate-fade-in">
+        <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">Chính phủ điện tử</div>
         <div className="divide-y divide-border">
           {isLoading ? (
             [1, 2, 3, 4].map((i) => (
@@ -35,7 +35,7 @@ const RightSidebar = () => {
           ) : (
             links.map((link, index) => (
               <a
-                key={"id" in link ? link.id : index}
+                key={"id" in link ? String(link.id) : `${link.url}-${link.title}-${index}`}
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -43,7 +43,7 @@ const RightSidebar = () => {
               >
                 <div className="w-12 h-8 rounded flex items-center justify-center text-xs font-bold group-hover:text-primary-foreground transition-colors overflow-hidden">
                   {"icon" in link && link.icon ? (
-                    <img src={link.icon} alt={link.title} className="w-full h-full object-contain" />
+                    <img src={link.icon} alt={link.title} className="w-full h-full object-contain" loading="lazy" />
                   ) : (
                     "LOGO"
                   )}
@@ -55,7 +55,7 @@ const RightSidebar = () => {
         </div>
       </Card>
 
-      <Card className="bg-gradient-to-br from-primary/5 to-accent/5 hover:shadow-card-hover transition-all hover-scale overflow-hidden animate-fade-in shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+      <Card className="bg-gradient-to-br from-primary/5 to-accent/5 overflow-hidden animate-fade-in shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
         <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">{quoteTitle}</div>
         <div className="p-6">
           <blockquote className="italic text-foreground border-l-4 border-primary pl-4 text-base leading-relaxed">{quoteContent}</blockquote>

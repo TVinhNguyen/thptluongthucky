@@ -642,59 +642,91 @@ SITE_URL = "https://thptluongthucky.edu.vn"
 
 @cache_page(60 * 60)  # Cache 1 hour
 def sitemap_xml(request):
-    """Generate dynamic XML sitemap from database content."""
+    """Generate dynamic XML sitemap with image extensions."""
+    from django.db.models import Max
+
     urls = []
 
-    # Static pages
+    # --- Lastmod cho trang chủ: lấy bài viết mới nhất ---
+    latest_post_date = Post.objects.filter(status='PUBLISHED').aggregate(
+        d=Max('updated_at')
+    )['d']
+    homepage_lastmod = latest_post_date.strftime("%Y-%m-%d") if latest_post_date else "2024-01-01"
+
+    # Static pages (thêm lastmod cho homepage, các trang ít thay đổi dùng ngày cố định)
     static_pages = [
-        ("/", "daily", "1.0"),
-        ("/gioi-thieu", "weekly", "0.8"),
-        ("/co-cau-to-chuc", "weekly", "0.7"),
-        ("/can-bo-giao-vien", "weekly", "0.7"),
-        ("/thu-vien-van-ban", "daily", "0.8"),
-        ("/chuyen-muc/anh", "weekly", "0.6"),
-        ("/chuyen-muc/video", "weekly", "0.6"),
-        ("/chuyen-muc/thoi-khoa-bieu", "weekly", "0.7"),
+        ("/",                          "daily",  "1.0", homepage_lastmod),
+        ("/gioi-thieu",                "monthly", "0.8", "2024-01-01"),
+        ("/co-cau-to-chuc",            "monthly", "0.7", "2024-01-01"),
+        ("/can-bo-giao-vien",          "monthly", "0.7", "2024-01-01"),
+        ("/thu-vien-van-ban",          "weekly",  "0.8", homepage_lastmod),
+        ("/chuyen-muc/anh",            "weekly",  "0.6", homepage_lastmod),
+        ("/chuyen-muc/video",          "weekly",  "0.6", homepage_lastmod),
+        ("/chuyen-muc/thoi-khoa-bieu", "monthly", "0.7", "2024-01-01"),
     ]
-    for path, freq, priority in static_pages:
+    for path, freq, priority, lastmod in static_pages:
         urls.append(f"""  <url>
     <loc>{SITE_URL}{path}</loc>
+    <lastmod>{lastmod}</lastmod>
     <changefreq>{freq}</changefreq>
     <priority>{priority}</priority>
   </url>""")
 
-    # Published posts
+    # Published posts — kèm image sitemap nếu có thumbnail
     posts = Post.objects.filter(status='PUBLISHED').order_by('-published_at')[:500]
     for post in posts:
         lastmod = (post.updated_at or post.published_at).strftime("%Y-%m-%d")
+        image_tag = ""
+        if post.thumbnail:
+            thumb_url = post.thumbnail if str(post.thumbnail).startswith("http") else f"{SITE_URL}{post.thumbnail}"
+            title_escaped = post.title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            image_tag = f"""
+    <image:image>
+      <image:loc>{thumb_url}</image:loc>
+      <image:title>{title_escaped}</image:title>
+    </image:image>"""
         urls.append(f"""  <url>
     <loc>{SITE_URL}/bai-viet/{post.slug}</loc>
     <lastmod>{lastmod}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.8</priority>{image_tag}
   </url>""")
 
-    # Categories
+    # Categories — lastmod = ngày bài viết mới nhất trong category
     categories = Category.objects.exclude(slug__in=['anh', 'video', 'thoi-khoa-bieu'])
     for cat in categories:
+        latest = Post.objects.filter(
+            status='PUBLISHED', category=cat
+        ).aggregate(d=Max('updated_at'))['d']
+        lastmod_tag = f"\n    <lastmod>{latest.strftime('%Y-%m-%d')}</lastmod>" if latest else ""
         urls.append(f"""  <url>
-    <loc>{SITE_URL}/chuyen-muc/{cat.slug}</loc>
-    <changefreq>daily</changefreq>
+    <loc>{SITE_URL}/chuyen-muc/{cat.slug}</loc>{lastmod_tag}
+    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>""")
 
-    # Photo albums
+    # Photo albums — kèm image sitemap cho cover image
     albums = PhotoAlbum.objects.all().order_by('-created_at')[:100]
     for album in albums:
+        lastmod = (getattr(album, 'updated_at', None) or album.created_at).strftime("%Y-%m-%d")
+        image_tag = ""
+        if getattr(album, 'cover_image_url', None):
+            name_escaped = album.name.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            image_tag = f"""
+    <image:image>
+      <image:loc>{album.cover_image_url}</image:loc>
+      <image:title>{name_escaped}</image:title>
+    </image:image>"""
         urls.append(f"""  <url>
     <loc>{SITE_URL}/chuyen-muc/anh/{album.slug}</loc>
-    <lastmod>{album.created_at.strftime("%Y-%m-%d")}</lastmod>
+    <lastmod>{lastmod}</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.5</priority>{image_tag}
   </url>""")
 
     xml = f"""<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 {chr(10).join(urls)}
 </urlset>"""
 
@@ -723,8 +755,8 @@ STATIC_PAGE_META = {
 
 
 def _build_meta_html(title, description, image, url, og_type="website",
-                     published_time=None, json_ld=None, noindex=False,
-                     og_image_alt=None):
+                     published_time=None, modified_time=None, author=None,
+                     json_ld=None, noindex=False, og_image_alt=None):
     """Build a minimal HTML page with correct meta tags for bot crawlers."""
     import json as json_mod
 
@@ -735,6 +767,7 @@ def _build_meta_html(title, description, image, url, og_type="website",
     escaped_og_type = html.escape(og_type or "website")
     escaped_image_alt = html.escape(og_image_alt or title or DEFAULT_OG_TITLE)
     robots_content = "noindex, nofollow" if noindex else "index, follow"
+    image_type = "image/png" if escaped_image.endswith(".png") else "image/jpeg"
 
     meta = f"""<!DOCTYPE html>
 <html lang="vi">
@@ -751,6 +784,9 @@ def _build_meta_html(title, description, image, url, og_type="website",
 <meta property="og:url" content="{escaped_url}"/>
 <meta property="og:image" content="{escaped_image}"/>
 <meta property="og:image:secure_url" content="{escaped_image}"/>
+<meta property="og:image:type" content="{image_type}"/>
+<meta property="og:image:width" content="500"/>
+<meta property="og:image:height" content="500"/>
 <meta property="og:image:alt" content="{escaped_image_alt}"/>
 <meta property="og:locale" content="vi_VN"/>
 <meta name="twitter:card" content="summary_large_image"/>
@@ -762,6 +798,11 @@ def _build_meta_html(title, description, image, url, og_type="website",
 
     if published_time:
         meta += f'\n<meta property="article:published_time" content="{published_time}"/>'
+    if modified_time:
+        meta += f'\n<meta property="article:modified_time" content="{modified_time}"/>'
+    if author:
+        escaped_author = html.escape(author)
+        meta += f'\n<meta property="article:author" content="{escaped_author}"/>'
 
     if json_ld:
         safe_json_ld = json_mod.dumps(json_ld, ensure_ascii=False).replace("</", "<\\/")
@@ -793,20 +834,31 @@ def prerender_bot(request, url_path=""):
             desc = post.summary or post.title
             image = request.build_absolute_uri(post.thumbnail.url) if post.thumbnail else DEFAULT_OG_IMAGE
             url = f"{SITE_URL}/bai-viet/{post.slug}"
+            pub_iso = post.published_at.isoformat() if post.published_at else ""
+            mod_iso = post.updated_at.isoformat() if post.updated_at else pub_iso
             json_ld = {
                 "@context": "https://schema.org",
                 "@type": "Article",
                 "headline": post.title,
                 "description": desc,
                 "image": image,
-                "datePublished": post.published_at.isoformat() if post.published_at else "",
-                "publisher": {"@type": "Organization", "name": DEFAULT_OG_TITLE},
+                "datePublished": pub_iso,
+                "dateModified": mod_iso,
+                "author": {"@type": "Organization", "name": DEFAULT_OG_TITLE},
+                "publisher": {
+                    "@type": "Organization",
+                    "name": DEFAULT_OG_TITLE,
+                    "logo": {"@type": "ImageObject", "url": DEFAULT_OG_IMAGE},
+                },
+                "mainEntityOfPage": {"@type": "WebPage", "@id": url},
                 "url": url,
             }
             html = _build_meta_html(
                 title, desc, image, url,
                 og_type="article",
-                published_time=post.published_at.isoformat() if post.published_at else None,
+                published_time=pub_iso or None,
+                modified_time=mod_iso or None,
+                author=DEFAULT_OG_TITLE,
                 json_ld=json_ld,
             )
             return HttpResponse(html, content_type="text/html")

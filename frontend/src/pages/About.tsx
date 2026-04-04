@@ -12,7 +12,7 @@ import { usePages } from "@/hooks/useApi";
 import { formatDate } from "@/lib/api";
 import { prependMediaBaseUrl } from "@/lib/util";
 import { BookOpen, Target, Eye, Star, Calendar, Clock } from "lucide-react";
-import { SEO } from "@/components/SEO";
+import { SEO, breadcrumbSchema } from "@/components/SEO";
 
 const defaultHighlights = [
   { title: "Sứ mệnh", content: "Nội dung đang cập nhật.", icon: Target },
@@ -145,6 +145,14 @@ const AboutPage = () => {
         url={pageSlug && pageSlug !== "gioi-thieu" ? `/gioi-thieu/${pageSlug}` : "/gioi-thieu"}
         canonical={pageSlug && pageSlug !== "gioi-thieu" ? `/gioi-thieu/${pageSlug}` : "/gioi-thieu"}
         keywords={["giới thiệu", "sứ mệnh", "tầm nhìn", "giá trị cốt lõi", pageSlug || ""]}
+        jsonLd={
+          pageSlug && pageSlug !== "gioi-thieu"
+            ? breadcrumbSchema([
+                { label: "Giới thiệu", href: "/gioi-thieu" },
+                { label: mainPage.title },
+              ])
+            : breadcrumbSchema([{ label: "Giới thiệu", href: "/gioi-thieu" }])
+        }
       />
       <Header />
       <Navigation />

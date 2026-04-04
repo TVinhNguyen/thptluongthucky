@@ -105,7 +105,7 @@ const Navigation = () => {
               size="icon"
               className="h-9 w-9 rounded-full border border-border/70 bg-card/95 text-foreground shadow-sm hover:bg-accent"
               onClick={() => setMobileNavOpen(true)}
-              aria-label="Mo menu dieu huong"
+              aria-label="Mở menu điều hướng"
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -114,7 +114,7 @@ const Navigation = () => {
           <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
             <SheetContent side="left" className="w-[86%] max-w-sm overflow-y-auto border-r border-border/70 bg-card/95 backdrop-blur">
               <SheetHeader className="border-b border-border/70 pb-3">
-                <SheetTitle className="text-left text-base">Danh muc</SheetTitle>
+                <SheetTitle className="text-left text-base">Danh mục</SheetTitle>
               </SheetHeader>
               <div className="mt-4 space-y-1">
                 {navItems.map((item) => {
@@ -159,7 +159,7 @@ const Navigation = () => {
             </SheetContent>
           </Sheet>
 
-          <div className="hidden md:flex items-center overflow-x-auto scrollbar-hide hover:text-accent-foreground">
+          <div className="hidden md:flex items-center overflow-x-auto scrollbar-hide">
             {navItems.map((item) => (
               <NavLink
                 key={item.label}

@@ -12,7 +12,7 @@ import { Calendar, User, Eye, Clock, ArrowRight } from "lucide-react";
 import { usePost, usePostsByCategory } from "@/hooks/useApi";
 import { formatDate, getMediaUrl } from "@/lib/api";
 import { prependMediaBaseUrl } from "@/lib/util";
-import { SEO, articleSchema } from "@/components/SEO";
+import { SEO, articleSchema, breadcrumbSchema } from "@/components/SEO";
 
 const PostDetail = () => {
   const { id } = useParams();
@@ -125,7 +125,13 @@ const PostDetail = () => {
             .filter((part) => part.length > 2)
             .slice(0, 4),
         ]}
-        jsonLd={articleSchema(post)}
+        jsonLd={[
+          articleSchema(post),
+          breadcrumbSchema([
+            { label: post.category_name || "Tin tức", href: `/chuyen-muc/${categorySlug}` },
+            { label: post.title },
+          ]),
+        ]}
       />
       <Header />
       <Navigation />
@@ -141,7 +147,7 @@ const PostDetail = () => {
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
             {/* Main Content */}
-            <div className="lg:col-span-2">
+            <article className="lg:col-span-2">
               <Card className="overflow-hidden shadow-card hover:shadow-card-hover transition-shadow animate-fade-in">
                 {post.thumbnail && (
                   <div className="aspect-video bg-muted overflow-hidden">
@@ -198,8 +204,8 @@ const PostDetail = () => {
                   />
                 </div>
               </Card>
-            </div>
-            
+            </article>
+
             {/* Sidebar - Related Posts */}
             <div className="lg:col-span-1">
               <Card className="p-6 sticky top-4 shadow-card animate-fade-in">

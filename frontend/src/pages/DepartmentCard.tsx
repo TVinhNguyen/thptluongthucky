@@ -39,7 +39,7 @@ const DepartmentCard = ({ dept }: DepartmentCardProps) => {
             <ul className="space-y-1">
               {staff.map((m: Staff, idx: number) => (
                 <li key={m.id ?? idx} className="text-foreground text-sm">
-                    • {m.full_name || 'Unnamed Staff'}
+                    • {m.full_name || 'Chưa có tên'}
                 </li>
             ))}
             </ul>

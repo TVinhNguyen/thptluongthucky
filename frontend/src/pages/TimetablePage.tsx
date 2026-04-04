@@ -6,7 +6,7 @@ import Breadcrumb from '@/components/Breadcrumb';
 import { TimetableFilters } from '@/components/timetable/TimetableFilters';
 import { TimetableGrid } from '@/components/timetable/TimetableGrid';
 import { useSchoolYears, useSchoolClasses, useTimetable } from '@/hooks/useTimetable';
-import { SEO } from '@/components/SEO';
+import { SEO, breadcrumbSchema } from '@/components/SEO';
 
 export default function TimetablePage() {
   const { data: schoolYears, loading: yearsLoading } = useSchoolYears();
@@ -45,6 +45,7 @@ export default function TimetablePage() {
         url="/chuyen-muc/thoi-khoa-bieu"
         canonical="/chuyen-muc/thoi-khoa-bieu"
         keywords={["thời khóa biểu", "lịch học", "lịch biểu", "năm học"]}
+        jsonLd={breadcrumbSchema([{ label: "Thời khóa biểu", href: "/chuyen-muc/thoi-khoa-bieu" }])}
       />
       <Header />
       <Navigation />
