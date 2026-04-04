@@ -5,6 +5,7 @@ import LeftSidebar from "@/components/LeftSidebar";
 import MainContent from "@/components/MainContent";
 import RightSidebar from "@/components/RightSidebar";
 import Footer from "@/components/Footer";
+import ScrollToTop from "@/components/ScrollToTop";
 import { SEO, organizationSchema, websiteSchema } from "@/components/SEO";
 
 const Index = () => {
@@ -18,7 +19,7 @@ const Index = () => {
       <Header />
       <Hero />
       <Navigation />
-      
+
       <div className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -26,12 +27,12 @@ const Index = () => {
             <div className="hidden lg:block lg:col-span-3">
               <LeftSidebar />
             </div>
-            
+
             {/* Main Content */}
             <div className="lg:col-span-6">
               <MainContent />
             </div>
-            
+
             {/* Right Sidebar */}
             <div className="lg:col-span-3">
               <RightSidebar />
@@ -39,8 +40,9 @@ const Index = () => {
           </div>
         </div>
       </div>
-      
+
       <Footer />
+      <ScrollToTop />
     </div>
   );
 };
