@@ -18,7 +18,7 @@ import {
 import { useStaff, useDepartments } from "@/hooks/useApi";
 import { getMediaUrl } from "@/lib/api";
 import { useLocation } from "react-router-dom";
-import { SEO } from "@/components/SEO";
+import { SEO, breadcrumbSchema } from "@/components/SEO";
 
 const normalizeSlug = (text: string) =>
   text
@@ -78,6 +78,7 @@ const Staff = () => {
         url="/can-bo-giao-vien"
         canonical="/can-bo-giao-vien"
         keywords={["cán bộ", "giáo viên", "đội ngũ", selectedDepartment !== "all" && departments?.find(d => d.id.toString() === selectedDepartment)?.name].filter(Boolean)}
+        jsonLd={breadcrumbSchema([{ label: "Cán bộ - Giáo viên", href: "/can-bo-giao-vien" }])}
       />
       <Header />
       <Navigation />

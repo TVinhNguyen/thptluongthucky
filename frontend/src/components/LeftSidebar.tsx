@@ -69,7 +69,7 @@ const LeftSidebar = () => {
   return (
     <aside className="space-y-6 animate-fade-in">
       {sections.map((section) => (
-        <Card key={section.id} className="bg-card hover:shadow-card-hover transition-all hover-scale overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+        <Card key={section.id} className="bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="bg-primary text-primary-foreground px-4 py-3 font-semibold">
             {section.title}
           </div>

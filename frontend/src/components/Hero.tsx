@@ -11,8 +11,12 @@ const Hero = () => {
   const activeBanners = banners && banners.length > 0 ? banners : null;
 
   useEffect(() => {
+    setCurrentSlide(0);
+  }, [activeBanners?.length]);
+
+  useEffect(() => {
     if (!activeBanners || activeBanners.length <= 1) return;
-    
+
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % activeBanners.length);
     }, 5000);
@@ -33,32 +37,37 @@ const Hero = () => {
   // If we have banners, show the slider
   if (activeBanners && activeBanners.length > 0) {
     return (
-      <div className="relative w-full h-64 md:h-80 lg:h-96 overflow-hidden bg-primary">
+      <div className="relative w-full h-64 md:h-80 lg:h-[30rem] overflow-hidden bg-primary">
         {activeBanners.map((banner, index) => (
           <div
             key={banner.id}
-            className={`absolute inset-0 transition-opacity duration-500 ${
-              index === currentSlide ? "opacity-100" : "opacity-0"
-            }`}
+            className={`absolute inset-0 transition-all duration-700 ease-in-out ${index === currentSlide
+              ? "opacity-100 scale-100 pointer-events-auto"
+              : "opacity-0 scale-[1.02] pointer-events-none"
+              }`}
           >
             {banner.link_url ? (
               <a href={banner.link_url} target="_blank" rel="noopener noreferrer">
                 <img
                   src={getMediaUrl(banner.image)}
-                  alt={banner.title || "Banner"}
+                  alt={banner.title || "Banner trường THPT Lương Thúc Kỳ"}
                   className="w-full h-full object-cover"
+                  loading={index === 0 ? "eager" : "lazy"}
+                  fetchPriority={index === 0 ? "high" : "auto"}
                 />
               </a>
             ) : (
               <img
                 src={getMediaUrl(banner.image)}
-                alt={banner.title || "Banner"}
+                alt={banner.title || "Banner trường THPT Lương Thúc Kỳ"}
                 className="w-full h-full object-cover"
+                loading={index === 0 ? "eager" : "lazy"}
+                fetchPriority={index === 0 ? "high" : "auto"}
               />
             )}
             {banner.title && (
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                <h2 className="text-white text-xl md:text-2xl font-bold text-center">
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 md:p-6">
+                <h2 className="text-white text-xl md:text-2xl font-bold text-center drop-shadow">
                   {banner.title}
                 </h2>
               </div>
@@ -71,16 +80,18 @@ const Hero = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white"
+              className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white rounded-full w-10 h-10 transition-all duration-200"
               onClick={prevSlide}
+              aria-label="Ảnh trước"
             >
               <ChevronLeft className="h-6 w-6" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white rounded-full w-10 h-10 transition-all duration-200"
               onClick={nextSlide}
+              aria-label="Ảnh tiếp theo"
             >
               <ChevronRight className="h-6 w-6" />
             </Button>
@@ -90,9 +101,11 @@ const Hero = () => {
                 <button
                   key={index}
                   onClick={() => setCurrentSlide(index)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentSlide ? "bg-white" : "bg-white/50"
-                  }`}
+                  aria-label={`Chuyển đến ảnh ${index + 1}`}
+                  className={`rounded-full transition-all duration-300 ${index === currentSlide
+                    ? "bg-white w-6 h-2"
+                    : "bg-white/50 w-2 h-2 hover:bg-white/80"
+                    }`}
                 />
               ))}
             </div>
@@ -112,7 +125,7 @@ const Hero = () => {
             <div className="mb-2">
               <div className="w-16 h-16 bg-primary-foreground/10 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm">
                 <svg className="w-10 h-10" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+                  <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z" />
                 </svg>
               </div>
             </div>
@@ -127,7 +140,7 @@ const Hero = () => {
             <div className="relative h-48 bg-primary-foreground/10 rounded-lg backdrop-blur-sm border border-primary-foreground/20 overflow-hidden">
               <div className="absolute inset-0 flex items-center justify-center text-primary-foreground/60">
                 <svg className="w-24 h-24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+                  <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z" />
                 </svg>
               </div>
             </div>

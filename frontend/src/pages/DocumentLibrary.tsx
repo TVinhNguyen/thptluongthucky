@@ -15,7 +15,7 @@ import { useDocuments, useDownloadDocument } from "@/hooks/useApi";
 import { formatDate, formatFileSize } from "@/lib/api";
 import type { Document } from "@/lib/api";
 import { DOCUMENT_LIBRARY_TEXT } from "@/constants/appText";
-import { SEO, collectionPageSchema } from "@/components/SEO";
+import { SEO, collectionPageSchema, breadcrumbSchema } from "@/components/SEO";
 
 const DocumentLibrary = () => {
   const [searchTerm, setSearchTerm] = useState<string | undefined>(undefined);
@@ -149,11 +149,14 @@ const DocumentLibrary = () => {
         canonical="/thu-vien-van-ban"
         ogImageAlt="Thư viện văn bản Trường THPT Lương Thúc Kỳ"
         keywords={["văn bản", "công văn", "quyết định", "tài liệu giáo dục", type || ""].filter(Boolean)}
-        jsonLd={collectionPageSchema(
-          "Thư viện văn bản",
-          "Văn bản, công văn, quyết định của Trường THPT Lương Thúc Kỳ",
-          "/thu-vien-van-ban"
-        )}
+        jsonLd={[
+          collectionPageSchema(
+            "Thư viện văn bản",
+            "Văn bản, công văn, quyết định của Trường THPT Lương Thúc Kỳ",
+            "/thu-vien-van-ban"
+          ),
+          breadcrumbSchema([{ label: "Thư viện văn bản", href: "/thu-vien-van-ban" }]),
+        ]}
       />
       <Header />
       <Navigation />
@@ -224,8 +227,29 @@ const DocumentLibrary = () => {
                 </div>
 
                 <div className="p-6">
-                  {/* 1 content dùng chung cho mọi tab */}
-                  <TabsContent value={activeTab} className="mt-0">
+                  <TabsContent value="all" className="mt-0">
+                    {isLoading ? (
+                      <LoadingSkeleton />
+                    ) : documents.length > 0 ? (
+                      <DocumentList docs={documents} />
+                    ) : (
+                      <p className="text-center text-muted-foreground py-8">
+                        {DOCUMENT_LIBRARY_TEXT.empty}
+                      </p>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="CONG_VAN" className="mt-0">
+                    {isLoading ? (
+                      <LoadingSkeleton />
+                    ) : documents.length > 0 ? (
+                      <DocumentList docs={documents} />
+                    ) : (
+                      <p className="text-center text-muted-foreground py-8">
+                        {DOCUMENT_LIBRARY_TEXT.empty}
+                      </p>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="QUYET_DINH" className="mt-0">
                     {isLoading ? (
                       <LoadingSkeleton />
                     ) : documents.length > 0 ? (
