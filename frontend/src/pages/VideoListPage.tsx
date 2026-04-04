@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { useVideos } from "@/hooks/useApi";
 import { formatDate, type Video } from "@/lib/api";
-import { SEO, collectionPageSchema } from "@/components/SEO";
+import { SEO, collectionPageSchema, breadcrumbSchema, videoObjectSchema } from "@/components/SEO";
 
 const VideoListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -39,7 +39,18 @@ const VideoListPage = () => {
         canonical={seoUrl}
         prevUrl={prevUrl}
         nextUrl={nextUrl}
-        jsonLd={collectionPageSchema("Thư viện video", "Video hoạt động của Trường THPT Lương Thúc Kỳ", "/chuyen-muc/video")}
+        jsonLd={[
+          collectionPageSchema("Thư viện video", "Video hoạt động của Trường THPT Lương Thúc Kỳ", "/chuyen-muc/video"),
+          breadcrumbSchema([{ label: "Thư viện video", href: "/chuyen-muc/video" }]),
+          ...(data?.results?.map((v: Video) => videoObjectSchema({
+            title: v.title,
+            description: v.description,
+            thumbnail: v.thumbnail,
+            video_url: v.video_url,
+            video_file: v.video_file,
+            created_at: v.created_at,
+          })) ?? []),
+        ]}
       />
       <Header />
       <Navigation />

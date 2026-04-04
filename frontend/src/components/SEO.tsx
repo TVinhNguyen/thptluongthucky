@@ -5,6 +5,12 @@ const DEFAULT_DESCRIPTION =
   "Trang thông tin điện tử Trường THPT Lương Thúc Kỳ. Cập nhật tin tức, văn bản, thời khóa biểu, hoạt động giáo dục và các thông tin liên quan.";
 const DEFAULT_IMAGE = "/logo_LTK.png";
 const SITE_URL = "https://thptluongthucky.edu.vn";
+const SCHOOL_TELEPHONE = "0254 123 4567";
+const SCHOOL_EMAIL = "nguyentandh@gmail.com";
+const SCHOOL_ADDRESS = "Thôn Nghĩa Hiệp, Xã Đại Lộc, Thành phố Đà Nẵng";
+const SCHOOL_LATITUDE = 15.886681405854894;
+const SCHOOL_LONGITUDE = 108.121433729357;
+const SCHOOL_FACEBOOK = "https://www.facebook.com/doanluongthucky";
 
 interface SEOProps {
   title?: string;
@@ -21,6 +27,7 @@ interface SEOProps {
   ogImageAlt?: string;
   ogImageWidth?: number;
   ogImageHeight?: number;
+  ogImageType?: string;
   twitterSite?: string;
   author?: string;
   prevUrl?: string;
@@ -52,6 +59,7 @@ export const SEO = ({
   ogImageAlt,
   ogImageWidth,
   ogImageHeight,
+  ogImageType,
   twitterSite = "@thptluongthucky",
   author,
   prevUrl,
@@ -63,6 +71,10 @@ export const SEO = ({
   const fullUrl = url ? toAbsoluteUrl(url) : SITE_URL;
   const canonicalUrl = canonical ? toAbsoluteUrl(canonical) : fullUrl;
   const robotsContent = noindex ? "noindex, nofollow" : DEFAULT_ROBOTS;
+  const resolvedImageType = ogImageType
+    ?? (fullImage.endsWith(".png") ? "image/png"
+      : fullImage.endsWith(".gif") ? "image/gif"
+      : "image/jpeg");
 
   return (
     <Helmet>
@@ -83,6 +95,7 @@ export const SEO = ({
       <meta property="og:url" content={fullUrl} />
       <meta property="og:image" content={fullImage} />
       <meta property="og:image:secure_url" content={fullImage} />
+      <meta property="og:image:type" content={resolvedImageType} />
       {ogImageAlt ? <meta property="og:image:alt" content={ogImageAlt} /> : null}
       {ogImageWidth ? <meta property="og:image:width" content={`${ogImageWidth}`} /> : null}
       {ogImageHeight ? <meta property="og:image:height" content={`${ogImageHeight}`} /> : null}
@@ -110,7 +123,7 @@ export const SEO = ({
       {/* JSON-LD Structured Data */}
       {jsonLd && (
         <script type="application/ld+json">
-          {JSON.stringify(Array.isArray(jsonLd) ? jsonLd : jsonLd)}
+          {JSON.stringify(jsonLd)}
         </script>
       )}
     </Helmet>
@@ -124,13 +137,52 @@ export function organizationSchema() {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
     name: SITE_NAME,
+    alternateName: "THPT Lương Thúc Kỳ",
     url: SITE_URL,
-    logo: `${SITE_URL}${DEFAULT_IMAGE}`,
+    logo: {
+      "@type": "ImageObject",
+      url: `${SITE_URL}${DEFAULT_IMAGE}`,
+      width: 500,
+      height: 500,
+    },
+    image: `${SITE_URL}${DEFAULT_IMAGE}`,
     description: DEFAULT_DESCRIPTION,
+    telephone: SCHOOL_TELEPHONE,
+    email: SCHOOL_EMAIL,
     address: {
       "@type": "PostalAddress",
+      streetAddress: SCHOOL_ADDRESS,
+      addressLocality: "Đà Nẵng",
+      addressRegion: "Đà Nẵng",
       addressCountry: "VN",
     },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: SCHOOL_LATITUDE,
+      longitude: SCHOOL_LONGITUDE,
+    },
+    hasMap: `https://www.google.com/maps?q=${SCHOOL_LATITUDE},${SCHOOL_LONGITUDE}`,
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        opens: "07:00",
+        closes: "17:00",
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Saturday"],
+        opens: "07:30",
+        closes: "11:30",
+      },
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: SCHOOL_TELEPHONE,
+      contactType: "customer service",
+      availableLanguage: "Vietnamese",
+    },
+    sameAs: [SCHOOL_FACEBOOK],
   };
 }
 
@@ -212,6 +264,37 @@ export function imageGallerySchema(album: {
     ...(album.cover_image_url && {
       image: album.cover_image_url,
     }),
+  };
+}
+
+export function videoObjectSchema(video: {
+  title: string;
+  description?: string;
+  thumbnail?: string | null;
+  video_url?: string | null;
+  video_file?: string | { url: string } | null;
+  created_at?: string;
+}) {
+  const thumbnailUrl = typeof video.thumbnail === "string"
+    ? video.thumbnail
+    : (video.thumbnail as { url?: string } | null)?.url || `${SITE_URL}${DEFAULT_IMAGE}`;
+  const contentUrl = video.video_url
+    || (typeof video.video_file === "string" ? video.video_file : video.video_file?.url)
+    || "";
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: video.title,
+    description: video.description || video.title,
+    thumbnailUrl,
+    ...(contentUrl && { contentUrl }),
+    uploadDate: video.created_at || new Date().toISOString(),
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      logo: { "@type": "ImageObject", url: `${SITE_URL}${DEFAULT_IMAGE}` },
+    },
   };
 }
 

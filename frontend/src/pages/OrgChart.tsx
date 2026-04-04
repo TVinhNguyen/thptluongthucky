@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getMediaUrl, type Department, type Staff } from "@/lib/api";
 import { useDepartments, useDepartmentStaff, useStaff } from "@/hooks/useApi";
 import DepartmentCard from "./DepartmentCard";
-import { SEO } from "@/components/SEO";
+import { SEO, breadcrumbSchema } from "@/components/SEO";
 
 const OrgChart = () => {
   const POSITION_PRINCIPAL = 'Hiệu trưởng';
@@ -30,6 +30,7 @@ const OrgChart = () => {
         url="/co-cau-to-chuc"
         canonical="/co-cau-to-chuc"
         keywords={["cơ cấu tổ chức", "ban giám hiệu", "phòng ban", "tổ chuyên môn"]}
+        jsonLd={breadcrumbSchema([{ label: "Cơ cấu tổ chức", href: "/co-cau-to-chuc" }])}
       />
       <Header />
       <Navigation />

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { usePhotoAlbums } from "@/hooks/useApi";
 import { formatDate, type PhotoAlbum } from "@/lib/api";
-import { SEO, collectionPageSchema } from "@/components/SEO";
+import { SEO, collectionPageSchema, breadcrumbSchema } from "@/components/SEO";
 
 const PhotoAlbumListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -40,7 +40,10 @@ const PhotoAlbumListPage = () => {
         canonical={seoUrl}
         prevUrl={prevUrl}
         nextUrl={nextUrl}
-        jsonLd={collectionPageSchema("Thư viện ảnh", "Album ảnh hoạt động của Trường THPT Lương Thúc Kỳ", "/chuyen-muc/anh")}
+        jsonLd={[
+          collectionPageSchema("Thư viện ảnh", "Album ảnh hoạt động của Trường THPT Lương Thúc Kỳ", "/chuyen-muc/anh"),
+          breadcrumbSchema([{ label: "Thư viện ảnh", href: "/chuyen-muc/anh" }]),
+        ]}
       />
       <Header />
       <Navigation />
