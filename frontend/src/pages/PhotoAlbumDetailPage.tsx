@@ -174,7 +174,7 @@ const PhotoAlbumDetailPage = () => {
                 >
                   {/* top bar */}
                   <div
-                    className="absolute top-4 right-4 flex items-center gap-2"
+                    className="absolute top-4 right-4 z-30 flex items-center gap-2"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Button variant="secondary" size="icon" onClick={zoomOut} disabled={scale <= 1}>
@@ -193,7 +193,7 @@ const PhotoAlbumDetailPage = () => {
 
                   {/* prev/next */}
                   <button
-                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                    className="absolute left-2 md:left-3 top-1/2 z-30 -translate-y-1/2 p-3 md:p-2 rounded-full bg-white/20 hover:bg-white/30 text-white touch-manipulation"
                     onClick={(e) => {
                       e.stopPropagation();
                       prevPhoto();
@@ -204,7 +204,7 @@ const PhotoAlbumDetailPage = () => {
                   </button>
 
                   <button
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                    className="absolute right-2 md:right-3 top-1/2 z-30 -translate-y-1/2 p-3 md:p-2 rounded-full bg-white/20 hover:bg-white/30 text-white touch-manipulation"
                     onClick={(e) => {
                       e.stopPropagation();
                       nextPhoto();
