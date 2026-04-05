@@ -170,6 +170,9 @@ class PhotoAlbumAdmin(ModelAdmin):
     ordering = ['-created_at']
     inlines = [PhotoInline]
 
+    class Media:
+        js = ("admin/js/photo_inline_file_input_fix.js",)
+
 
 @admin.register(Photo)
 class PhotoAdmin(ModelAdmin):
