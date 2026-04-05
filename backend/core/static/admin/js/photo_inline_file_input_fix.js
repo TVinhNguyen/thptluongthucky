@@ -1,12 +1,21 @@
 (function () {
+  function getExpectedContainer(fileInput) {
+    if (!fileInput) {
+      return null;
+    }
+
+    var container = fileInput.parentNode;
+    if (container) container = container.parentNode;
+    if (container) container = container.parentNode;
+    return container || null;
+  }
+
   function ensureFallbackPlaceholder(fileInput) {
-    if (!fileInput || !fileInput.closest(".inline-group")) {
+    if (!fileInput) {
       return;
     }
 
-    var container = fileInput.parentElement;
-    if (container) container = container.parentElement;
-    if (container) container = container.parentElement;
+    var container = getExpectedContainer(fileInput);
     if (!container) {
       return;
     }
@@ -26,7 +35,7 @@
 
   function scan(root) {
     var scope = root || document;
-    var inputs = scope.querySelectorAll(".inline-group input[type='file']");
+    var inputs = scope.querySelectorAll("input[type='file']");
     for (var i = 0; i < inputs.length; i += 1) {
       ensureFallbackPlaceholder(inputs[i]);
     }
@@ -34,6 +43,19 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     scan(document);
+
+    // Ensure placeholder exists before Unfold's own input change handler runs.
+    document.addEventListener(
+      "change",
+      function (event) {
+        var target = event.target;
+        if (!target || !target.matches || !target.matches("input[type='file']")) {
+          return;
+        }
+        ensureFallbackPlaceholder(target);
+      },
+      true
+    );
 
     var observer = new MutationObserver(function (mutations) {
       for (var i = 0; i < mutations.length; i += 1) {
