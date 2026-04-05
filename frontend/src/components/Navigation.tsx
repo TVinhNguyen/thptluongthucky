@@ -4,7 +4,7 @@ import { useCategories } from "@/hooks/useApi";
 import { Link } from "react-router-dom";
 import { Menu, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 
 interface NavItem {
@@ -115,6 +115,9 @@ const Navigation = () => {
             <SheetContent side="left" className="w-[86%] max-w-sm overflow-y-auto border-r border-border/70 bg-card/95 backdrop-blur">
               <SheetHeader className="border-b border-border/70 pb-3">
                 <SheetTitle className="text-left text-base">Danh mục</SheetTitle>
+                <SheetDescription className="sr-only">
+                  Danh sach chuyen muc va lien ket dieu huong tren di dong.
+                </SheetDescription>
               </SheetHeader>
               <div className="mt-4 space-y-1">
                 {navItems.map((item) => {
