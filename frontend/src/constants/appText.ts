@@ -6,7 +6,7 @@ export const HEADER_TEXT = {
       label: "ĐĂNG NHẬP",
       href: "https://user.vnedu.vn/sso//?use_cache=1&continue=http://truongthptluongthucky.web.vnedu.vn/security/ssoVnedu",
     },
-    { label: "XEM CÔNG VĂN", href: "/cong-van" },
+    { label: "XEM CÔNG VĂN", href: "https://www.danang.edu.vn/van-ban/vbplus/0/0/0/0" },
     { label: "HỌC TRỰC TUYẾN", href: "https://k12online.vn/" },
     { label: "XEM CAMERA", href: "https://web.cloudcam.vn/login" },
     { label: "TRA CỨU ĐIỂM", href: "https://smas.edu.vn/Home/LogOn?ReturnUrl=%2f" },

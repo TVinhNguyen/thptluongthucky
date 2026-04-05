@@ -17,6 +17,8 @@ python-dotenv
 Pillow
 django-filter
 python-slugify
+easy-thumbnails
+django-image-cropping
 
 # --- Editor ---
 # Django CKEditor 5 - Modern WYSIWYG editor

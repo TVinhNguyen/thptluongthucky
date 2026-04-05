@@ -228,10 +228,18 @@ class VideoSerializer(serializers.ModelSerializer):
 
 class BannerSerializer(serializers.ModelSerializer):
     """Serializer cho banner"""
+    image_cropped_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Banner
-        fields = ['id', 'title', 'image', 'link_url', 'sort_order', 'is_active']
+        fields = ['id', 'title', 'image', 'image_cropped_url', 'link_url', 'sort_order', 'is_active']
+
+    def get_image_cropped_url(self, obj):
+        if not obj.image:
+            return None
+        request = self.context.get("request")
+        relative_url = f"/api/banners/{obj.pk}/cropped-image/"
+        return request.build_absolute_uri(relative_url) if request else relative_url
 
 
 class ExternalLinkSerializer(serializers.ModelSerializer):

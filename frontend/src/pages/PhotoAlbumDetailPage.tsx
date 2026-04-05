@@ -246,9 +246,9 @@ const PhotoAlbumDetailPage = () => {
                           ({activeIndex + 1}/{photos.length}) — Zoom: {Math.round(scale * 100)}%
                         </span>
                       </div>
-                      <div className="mt-1 text-center text-white/50 text-xs">
+                      {/* <div className="mt-1 text-center text-white/50 text-xs">
                         ESC để đóng • ←/→ để chuyển • Cuộn chuột để zoom
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
