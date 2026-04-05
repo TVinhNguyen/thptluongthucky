@@ -56,7 +56,6 @@ const Hero = () => {
                     alt={banner.title || "Banner truong THPT Luong Thuc Ky"}
                     className="w-full h-full object-cover"
                     loading={index === 0 ? "eager" : "lazy"}
-                    fetchPriority={index === 0 ? "high" : "auto"}
                   />
                 </a>
               ) : (
@@ -65,7 +64,6 @@ const Hero = () => {
                   alt={banner.title || "Banner truong THPT Luong Thuc Ky"}
                   className="w-full h-full object-cover"
                   loading={index === 0 ? "eager" : "lazy"}
-                  fetchPriority={index === 0 ? "high" : "auto"}
                 />
               )}
               {banner.title && (
