@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { HEADER_TEXT } from "@/constants/appText";
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 const SchoolIcon = () => (
   <svg className="w-8 h-8 text-primary-foreground" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -87,6 +87,9 @@ const Header = () => {
               <SheetContent side="top" className="bg-primary text-primary-foreground border-b border-primary-foreground/20">
                 <SheetHeader>
                   <SheetTitle className="text-primary-foreground">Menu</SheetTitle>
+                  <SheetDescription className="sr-only">
+                    Menu dieu huong va tim kiem tren thiet bi di dong.
+                  </SheetDescription>
                 </SheetHeader>
                 <div className="flex flex-col gap-2 mt-4">
                   {topMenuItems.map((item) => (

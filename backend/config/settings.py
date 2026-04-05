@@ -305,7 +305,7 @@ DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 # Cache configuration
 # Default: 120s (2 minutes). Override via env for easy tuning.
-CACHE_TTL_SECONDS = int(os.environ.get("CACHE_TTL_SECONDS", "10"))
+CACHE_TTL_SECONDS = int(os.environ.get("CACHE_TTL_SECONDS", "120"))
 
 REDIS_URL = os.environ.get("REDIS_URL", "").strip()
 if REDIS_URL:
