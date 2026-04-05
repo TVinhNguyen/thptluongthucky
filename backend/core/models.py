@@ -5,6 +5,7 @@ from django_ckeditor_5.fields import CKEditor5Field
 from .utils import slugify_vietnamese
 from .validators import document_file_validator
 from cloudinary.models import CloudinaryField
+from image_cropping import ImageRatioField
 
 # Create your models here.
 
@@ -351,15 +352,21 @@ class Banner(models.Model):
     """Slide & Quảng cáo"""
     title = models.CharField(max_length=200, blank=True, verbose_name="Tiêu đề")
     image = models.ImageField(upload_to='banners/', verbose_name="Ảnh banner")
+    cropping = ImageRatioField(
+        "image",
+        "1920x540",
+        verbose_name="Vùng cắt ảnh",
+        help_text="Kéo thả để chọn vùng hiển thị banner (tỉ lệ 1920x540).",
+    )
     link_url = models.URLField(max_length=500, blank=True, verbose_name="Link đến")
     sort_order = models.IntegerField(default=0, verbose_name="Thứ tự")
     is_active = models.BooleanField(default=True, verbose_name="Hiển thị")
-    
+
     class Meta:
         verbose_name = "Banner"
         verbose_name_plural = "Banner"
         ordering = ['sort_order']
-    
+
     def __str__(self):
         return self.title or f"Banner #{self.id}"
 
@@ -672,3 +679,5 @@ class TimetableEntry(models.Model):
     
     def __str__(self):
         return f"{self.school_class} - T{self.day_of_week} - Tiết {self.period}"
+
+

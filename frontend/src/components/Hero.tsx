@@ -34,46 +34,50 @@ const Hero = () => {
     setCurrentSlide((prev) => (prev - 1 + activeBanners.length) % activeBanners.length);
   };
 
-  // If we have banners, show the slider
   if (activeBanners && activeBanners.length > 0) {
     return (
       <div className="relative w-full h-64 md:h-80 lg:h-[30rem] overflow-hidden bg-primary">
-        {activeBanners.map((banner, index) => (
-          <div
-            key={banner.id}
-            className={`absolute inset-0 transition-all duration-700 ease-in-out ${index === currentSlide
-              ? "opacity-100 scale-100 pointer-events-auto"
-              : "opacity-0 scale-[1.02] pointer-events-none"
+        {activeBanners.map((banner, index) => {
+          const bannerSrc = getMediaUrl(banner.image_cropped_url || banner.image);
+
+          return (
+            <div
+              key={banner.id}
+              className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+                index === currentSlide
+                  ? "opacity-100 scale-100 pointer-events-auto"
+                  : "opacity-0 scale-[1.02] pointer-events-none"
               }`}
-          >
-            {banner.link_url ? (
-              <a href={banner.link_url} target="_blank" rel="noopener noreferrer">
+            >
+              {banner.link_url ? (
+                <a href={banner.link_url} target="_blank" rel="noopener noreferrer">
+                  <img
+                    src={bannerSrc}
+                    alt={banner.title || "Banner truong THPT Luong Thuc Ky"}
+                    className="w-full h-full object-cover"
+                    loading={index === 0 ? "eager" : "lazy"}
+                    fetchPriority={index === 0 ? "high" : "auto"}
+                  />
+                </a>
+              ) : (
                 <img
-                  src={getMediaUrl(banner.image)}
-                  alt={banner.title || "Banner trường THPT Lương Thúc Kỳ"}
+                  src={bannerSrc}
+                  alt={banner.title || "Banner truong THPT Luong Thuc Ky"}
                   className="w-full h-full object-cover"
                   loading={index === 0 ? "eager" : "lazy"}
                   fetchPriority={index === 0 ? "high" : "auto"}
                 />
-              </a>
-            ) : (
-              <img
-                src={getMediaUrl(banner.image)}
-                alt={banner.title || "Banner trường THPT Lương Thúc Kỳ"}
-                className="w-full h-full object-cover"
-                loading={index === 0 ? "eager" : "lazy"}
-                fetchPriority={index === 0 ? "high" : "auto"}
-              />
-            )}
-            {banner.title && (
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 md:p-6">
-                <h2 className="text-white text-xl md:text-2xl font-bold text-center drop-shadow">
-                  {banner.title}
-                </h2>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+              {banner.title && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 md:p-6">
+                  <h2 className="text-white text-xl md:text-2xl font-bold text-center drop-shadow">
+                    {banner.title}
+                  </h2>
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {activeBanners.length > 1 && (
           <>
@@ -82,7 +86,7 @@ const Hero = () => {
               size="icon"
               className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white rounded-full w-10 h-10 transition-all duration-200"
               onClick={prevSlide}
-              aria-label="Ảnh trước"
+              aria-label="Anh truoc"
             >
               <ChevronLeft className="h-6 w-6" />
             </Button>
@@ -91,7 +95,7 @@ const Hero = () => {
               size="icon"
               className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white rounded-full w-10 h-10 transition-all duration-200"
               onClick={nextSlide}
-              aria-label="Ảnh tiếp theo"
+              aria-label="Anh tiep theo"
             >
               <ChevronRight className="h-6 w-6" />
             </Button>
@@ -101,11 +105,10 @@ const Hero = () => {
                 <button
                   key={index}
                   onClick={() => setCurrentSlide(index)}
-                  aria-label={`Chuyển đến ảnh ${index + 1}`}
-                  className={`rounded-full transition-all duration-300 ${index === currentSlide
-                    ? "bg-white w-6 h-2"
-                    : "bg-white/50 w-2 h-2 hover:bg-white/80"
-                    }`}
+                  aria-label={`Chuyen den anh ${index + 1}`}
+                  className={`rounded-full transition-all duration-300 ${
+                    index === currentSlide ? "bg-white w-6 h-2" : "bg-white/50 w-2 h-2 hover:bg-white/80"
+                  }`}
                 />
               ))}
             </div>
@@ -115,7 +118,6 @@ const Hero = () => {
     );
   }
 
-  // Default hero if no banners
   return (
     <div className="bg-gradient-to-r from-primary/90 to-primary relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-30"></div>
@@ -129,12 +131,8 @@ const Hero = () => {
                 </svg>
               </div>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              TRƯỜNG THPT LƯƠNG THÚC KỲ
-            </h1>
-            <p className="text-xl text-primary-foreground/90 font-medium">
-              Cổng thông tin điện tử
-            </p>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">TRƯỜNG THPT LƯƠNG THÚC KỲ</h1>
+            <p className="text-xl text-primary-foreground/90 font-medium">Cổng thông tin điện tử</p>
           </div>
           <div className="flex-1 hidden md:block">
             <div className="relative h-48 bg-primary-foreground/10 rounded-lg backdrop-blur-sm border border-primary-foreground/20 overflow-hidden">

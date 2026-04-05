@@ -9,6 +9,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.db.models import F
 from django.conf import settings
 from django.http import HttpResponse
+from io import BytesIO
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import cache_page
@@ -16,6 +17,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 import logging
 import requests
 import html
+from PIL import Image
 
 from .models import (
     Category, Post, Page, Document, Department, Staff,
@@ -405,6 +407,58 @@ class BannerViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Banner.objects.filter(is_active=True).order_by('sort_order')
     serializer_class = BannerSerializer
     permission_classes = [AllowAny]
+
+    @action(detail=True, methods=['get'], url_path='cropped-image')
+    def cropped_image(self, request, pk=None):
+        """
+        Return an actual cropped banner image based on admin crop box.
+        This avoids relying on thumbnail cache state and guarantees FE sees
+        the selected crop area immediately.
+        """
+        banner = self.get_object()
+        if not banner.image:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            image_file = banner.image.open("rb")
+        except Exception:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            with image_file:
+                image = Image.open(image_file).convert("RGB")
+
+            crop_box = None
+            if banner.cropping:
+                parts = [p.strip() for p in banner.cropping.split(",")]
+                if len(parts) == 4:
+                    x1, y1, x2, y2 = [int(float(v)) for v in parts]
+                    width, height = image.size
+                    x1 = max(0, min(x1, width))
+                    y1 = max(0, min(y1, height))
+                    x2 = max(0, min(x2, width))
+                    y2 = max(0, min(y2, height))
+                    if x2 > x1 and y2 > y1:
+                        crop_box = (x1, y1, x2, y2)
+
+            if crop_box:
+                image = image.crop(crop_box)
+
+            # Match FE banner display target ratio.
+            image = image.resize((1920, 540), Image.Resampling.LANCZOS)
+
+            output = BytesIO()
+            image.save(output, format="JPEG", quality=90, optimize=True)
+            output.seek(0)
+
+            response = HttpResponse(output.getvalue(), content_type="image/jpeg")
+            response["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            response["Pragma"] = "no-cache"
+            response["Expires"] = "0"
+            return response
+        except Exception:
+            logger.exception("Failed to build cropped banner image for banner id=%s", banner.pk)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @method_decorator(cache_page(settings.CACHE_TTL_SECONDS), name='list')

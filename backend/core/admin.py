@@ -5,6 +5,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import path
 from django.urls import reverse
+from image_cropping import ImageCroppingMixin
 from unfold.admin import ModelAdmin
 from .models import (
     Category, Post, Page, Document, Department, Staff, StaffFilterTag,
@@ -200,12 +201,29 @@ class VideoAdmin(ModelAdmin):
 
 
 @admin.register(Banner)
-class BannerAdmin(ModelAdmin):
+class BannerAdmin(ImageCroppingMixin, ModelAdmin):
     list_display = ['title', 'sort_order', 'is_active']
     list_filter = ['is_active']
     search_fields = ['title']
     list_editable = ['sort_order', 'is_active']
     ordering = ['sort_order']
+    fieldsets = (
+        ('Noi dung banner', {
+            'fields': ('title', 'image', 'cropping', 'link_url')
+        }),
+        ('Hien thi', {
+            'fields': ('sort_order', 'is_active')
+        }),
+    )
+
+    class Media:
+        css = {
+            "all": ("image_cropping/css/image_cropping.css",),
+        }
+        js = (
+            "image_cropping/js/src/jquery.Jcrop.min.js",
+            "image_cropping/js/dist/image_cropping.min.js",
+        )
     
     actions = ['activate_banners', 'deactivate_banners']
     

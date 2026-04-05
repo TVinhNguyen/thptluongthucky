@@ -121,6 +121,7 @@ export interface Banner {
   id: number;
   title: string;
   image: string;
+  image_cropped_url?: string | null;
   link_url: string;
   sort_order: number;
   is_active: boolean;

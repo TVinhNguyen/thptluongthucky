@@ -15,6 +15,11 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+try:
+    import whitenoise  # noqa: F401
+    HAS_WHITENOISE = True
+except ImportError:
+    HAS_WHITENOISE = False
 
 
 # Quick-start development settings - unsuitable for production
@@ -43,6 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "cloudinary",
     "cloudinary_storage",
+    "easy_thumbnails",
+    "image_cropping",
     
     # Third-party apps
     'rest_framework',
@@ -56,7 +63,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise for static files
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -65,6 +71,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+if HAS_WHITENOISE:
+    # Keep WhiteNoise enabled when dependency is available.
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 ROOT_URLCONF = 'config.urls'
 
@@ -141,7 +150,16 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # WhiteNoise: Serve static files in production with compression and caching
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+if HAS_WHITENOISE:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+THUMBNAIL_PROCESSORS = (
+    "easy_thumbnails.processors.colorspace",
+    "image_cropping.thumbnail_processors.crop_corners",
+    "easy_thumbnails.processors.autocrop",
+    "easy_thumbnails.processors.scale_and_crop",
+    "easy_thumbnails.processors.filters",
+)
 
 # Media files (User uploads)
 MEDIA_URL = '/media/'
@@ -166,8 +184,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://frontend:80",
     "http://127.0.0.1:5173",
+    "http://localhost:8001",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -284,7 +305,7 @@ DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 # Cache configuration
 # Default: 120s (2 minutes). Override via env for easy tuning.
-CACHE_TTL_SECONDS = int(os.environ.get("CACHE_TTL_SECONDS", "120"))
+CACHE_TTL_SECONDS = int(os.environ.get("CACHE_TTL_SECONDS", "10"))
 
 REDIS_URL = os.environ.get("REDIS_URL", "").strip()
 if REDIS_URL:
