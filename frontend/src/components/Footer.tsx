@@ -11,7 +11,7 @@ const Footer = () => {
             <h3 className="font-bold text-lg mb-4">THPT Lương Thúc Kỳ</h3>
             <div className="space-y-2 text-sm text-primary-foreground/90">
               <p>Địa chỉ: Thôn Nghĩa Hiệp - Xã Đại Lộc - Thành phố Đà Nẵng</p>
-              <p>Điện thoại: 0254 123 4567</p>
+              <p>Điện thoại: 0235 376 5199</p>
               <p>Email: nguyentandh@gmail.com</p>
               <a
                 href="https://www.facebook.com/doanluongthucky"
