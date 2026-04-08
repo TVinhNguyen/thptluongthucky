@@ -5,7 +5,7 @@ const DEFAULT_DESCRIPTION =
   "Trang thông tin điện tử Trường THPT Lương Thúc Kỳ. Cập nhật tin tức, văn bản, thời khóa biểu, hoạt động giáo dục và các thông tin liên quan.";
 const DEFAULT_IMAGE = "/logo_LTK.png";
 const SITE_URL = "https://thptluongthucky.edu.vn";
-const SCHOOL_TELEPHONE = "0254 123 4567";
+const SCHOOL_TELEPHONE = "0235 376 5199";
 const SCHOOL_EMAIL = "nguyentandh@gmail.com";
 const SCHOOL_ADDRESS = "Thôn Nghĩa Hiệp, Xã Đại Lộc, Thành phố Đà Nẵng";
 const SCHOOL_LATITUDE = 15.886681405854894;
