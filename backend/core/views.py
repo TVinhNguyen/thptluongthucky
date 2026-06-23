@@ -20,12 +20,12 @@ import html
 from PIL import Image
 
 from .models import (
-    Category, Post, Page, Document, Department, Staff,
+    Category, Post, PostAttachment, Page, Document, Department, Staff,
     PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage,
     SiteSetting, SchoolYear, SchoolClass, TimetableEntry
 )
 from .serializers import (
-    CategorySerializer, PostListSerializer, PostDetailSerializer,
+    CategorySerializer, PostListSerializer, PostDetailSerializer, PostAttachmentSerializer,
     PageSerializer, DocumentSerializer, DocumentCreateUpdateSerializer,
     DepartmentSerializer, StaffSerializer,
     PhotoAlbumListSerializer, PhotoAlbumDetailSerializer, PhotoSerializer,
@@ -99,6 +99,85 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
         instance.refresh_from_db()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=['post'],
+        url_path=r'attachments/(?P<attachment_id>[^/.]+)/download',
+        permission_classes=[AllowAny],
+    )
+    def download_attachment(self, request, slug=None, attachment_id=None):
+        post = self.get_object()
+        attachment = post.attachments.filter(pk=attachment_id).first()
+        if not attachment:
+            return Response({'detail': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
+        PostAttachment.objects.filter(pk=attachment.pk).update(download_count=F('download_count') + 1)
+        attachment.refresh_from_db()
+        serializer = PostAttachmentSerializer(attachment)
+        return Response(serializer.data)
+
+    @xframe_options_exempt
+    @method_decorator(cache_page(60 * 10))
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path=r'attachments/(?P<attachment_id>[^/.]+)/preview',
+        permission_classes=[AllowAny],
+        throttle_classes=[DocumentPreviewThrottle],
+    )
+    def preview_attachment(self, request, slug=None, attachment_id=None):
+        import zipfile
+        import io
+        from cloudinary.utils import download_archive_url
+
+        post = self.get_object()
+        attachment = post.attachments.filter(pk=attachment_id).first()
+        if not attachment:
+            return Response({'detail': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
+        if not attachment.file:
+            return Response({'detail': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        filename = attachment.file_name or ''
+
+        try:
+            direct_url = attachment.file.url
+            resp = requests.get(direct_url, timeout=30)
+            if resp.status_code == 200 and len(resp.content) > 0:
+                content_type = resp.headers.get('Content-Type', 'application/octet-stream')
+                if filename.lower().endswith('.pdf'):
+                    content_type = 'application/pdf'
+                response = HttpResponse(resp.content, content_type=content_type)
+                response['Content-Disposition'] = f'inline; filename="{filename}"'
+                return response
+        except Exception:
+            pass
+
+        try:
+            try:
+                full_public_id = attachment.file.url.split('/')[-1].split('?')[0]
+            except Exception:
+                full_public_id = str(attachment.file)
+
+            archive_url = download_archive_url(
+                public_ids=[full_public_id],
+                resource_type='raw',
+                target_format='zip'
+            )
+            resp = requests.get(archive_url, timeout=30)
+            resp.raise_for_status()
+
+            z = zipfile.ZipFile(io.BytesIO(resp.content))
+            file_content = z.read(z.namelist()[0])
+
+            content_type = 'application/octet-stream'
+            if filename.lower().endswith('.pdf'):
+                content_type = 'application/pdf'
+
+            response = HttpResponse(file_content, content_type=content_type)
+            response['Content-Disposition'] = f'inline; filename="{filename}"'
+            return response
+        except Exception:
+            return Response({'detail': 'Cannot fetch file'}, status=status.HTTP_502_BAD_GATEWAY)
 
     @method_decorator(cache_page(settings.CACHE_TTL_SECONDS))
     @action(detail=False, methods=['get'])

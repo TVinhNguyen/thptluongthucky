@@ -2,7 +2,7 @@
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 import cloudinary.uploader
-from .models import PhotoAlbum, Photo, Video, Document
+from .models import PhotoAlbum, Photo, Video, Document, PostAttachment
 
 @receiver(post_delete, sender=PhotoAlbum)
 def delete_album_cover(sender, instance, **kwargs):
@@ -42,6 +42,16 @@ def delete_video_assets(sender, instance, **kwargs):
 @receiver(post_delete, sender=Document)
 def delete_document_file(sender, instance, **kwargs):
     """Xóa file từ Cloudinary khi document bị delete"""
+    if instance.file:
+        try:
+            cloudinary.uploader.destroy(instance.file.public_id, resource_type='raw')
+        except Exception:
+            pass
+
+
+@receiver(post_delete, sender=PostAttachment)
+def delete_post_attachment_file(sender, instance, **kwargs):
+    """Delete Cloudinary raw file when a post attachment is removed."""
     if instance.file:
         try:
             cloudinary.uploader.destroy(instance.file.public_id, resource_type='raw')

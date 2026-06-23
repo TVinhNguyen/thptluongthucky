@@ -1,21 +1,24 @@
 import { useParams, Link } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
+import { DocumentViewer } from "@/components/DocumentViewer";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, User, Eye, Clock, ArrowRight } from "lucide-react";
+import { Calendar, Eye, Clock, ArrowRight, Download, FileText, Paperclip } from "lucide-react";
 import { usePost, usePostsByCategory } from "@/hooks/useApi";
-import { formatDate, getMediaUrl } from "@/lib/api";
+import { api, formatDate, getMediaUrl, type PostAttachment } from "@/lib/api";
 import { prependMediaBaseUrl } from "@/lib/util";
 import { SEO, articleSchema, breadcrumbSchema } from "@/components/SEO";
 
 const PostDetail = () => {
   const { id } = useParams();
+  const [selectedAttachment, setSelectedAttachment] = useState<PostAttachment | null>(null);
   const { data: post, isLoading, error } = usePost(id || '');
   
   // Fetch related posts from the same category (only when post is loaded)
@@ -34,6 +37,27 @@ const PostDetail = () => {
   const processedContent = useMemo(() => {
     return prependMediaBaseUrl(post?.content);
   }, [post?.content]);
+
+  const attachments = post?.attachments ?? [];
+
+  const handleDownloadAttachment = async (attachment: PostAttachment) => {
+    if (!post) return;
+
+    try {
+      await api.posts.downloadAttachment(post.slug, attachment.id);
+    } catch (error) {
+      // The direct file URL is still usable if the counter endpoint fails.
+    }
+
+    const downloadUrl = attachment.file_url || attachment.file;
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = attachment.file_name || attachment.title;
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   if (isLoading) {
     return (
@@ -202,6 +226,65 @@ const PostDetail = () => {
                     className="ck-content prose prose-lg max-w-none"
                     dangerouslySetInnerHTML={{ __html: processedContent }}
                   />
+
+                  {attachments.length > 0 && (
+                    <div className="mt-8">
+                      <Separator className="mb-5" />
+                      <div className="flex items-center gap-2 mb-4">
+                        <Paperclip className="w-5 h-5 text-primary" />
+                        <h2 className="text-xl font-bold text-foreground">
+                          File đính kèm
+                        </h2>
+                      </div>
+
+                      <div className="space-y-3">
+                        {attachments.map((attachment) => (
+                          <div
+                            key={attachment.id}
+                            className="flex flex-col gap-3 rounded-lg border border-border bg-background p-4 hover:bg-accent transition-all hover-scale group animate-fade-in sm:flex-row sm:items-center sm:justify-between"
+                          >
+                            <div className="flex min-w-0 items-start gap-3">
+                              <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                                <FileText className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium text-foreground break-words group-hover:text-primary transition-colors">
+                                  {attachment.file_name || attachment.title}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {attachment.formatted_file_size}
+                                  {attachment.download_count > 0
+                                    ? ` • ${attachment.download_count} lượt tải`
+                                    : ""}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex shrink-0 gap-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedAttachment(attachment)}
+                              >
+                                <Eye className="mr-2 h-4 w-4" />
+                                Xem trước
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownloadAttachment(attachment)}
+                              >
+                                <Download className="mr-2 h-4 w-4" />
+                                Tải xuống
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
             </article>
@@ -278,6 +361,12 @@ const PostDetail = () => {
           </div>
         </div>
       </div>
+
+      <DocumentViewer
+        document={selectedAttachment}
+        open={!!selectedAttachment}
+        onOpenChange={(open) => !open && setSelectedAttachment(null)}
+      />
       
       <Footer />
     </div>

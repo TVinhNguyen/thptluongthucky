@@ -3,12 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Download, AlertCircle, Maximize2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import type { Document } from "@/lib/api";
+import type { Document, PostAttachment } from "@/lib/api";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface DocumentViewerProps {
-  document: Document | null;
+  document: Document | PostAttachment | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
