@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import (
-    Category, Post, Page, Document, Department, Staff,
+    Category, Post, PostAttachment, Page, Document, Department, Staff,
     PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage,
     SchoolYear, SchoolClass, TimetableEntry
 )
@@ -34,16 +34,68 @@ class PostListSerializer(serializers.ModelSerializer):
                   'category_name', 'category_slug', 'is_featured', 'views', 'status', 'published_at']
 
 
+class PostAttachmentSerializer(serializers.ModelSerializer):
+    """Read-only serializer for post attachments."""
+
+    title = serializers.SerializerMethodField()
+    file_url = serializers.SerializerMethodField()
+    file_view_url = serializers.SerializerMethodField()
+    file_name = serializers.SerializerMethodField()
+    formatted_file_size = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PostAttachment
+        fields = [
+            'id', 'title', 'file', 'file_url', 'file_view_url', 'file_name',
+            'file_size', 'formatted_file_size', 'download_count', 'sort_order',
+            'created_at',
+        ]
+
+    def _get_raw_url(self, obj):
+        try:
+            return obj.file.url if (obj.file and hasattr(obj.file, 'url')) else None
+        except Exception:
+            if obj.file:
+                url, _ = cloudinary_url(str(obj.file), resource_type='raw')
+                return url
+            return None
+
+    def get_title(self, obj):
+        return obj.file_name
+
+    def get_file_url(self, obj):
+        return self._get_raw_url(obj)
+
+    def get_file_view_url(self, obj):
+        filename = obj.file_name or ''
+        if filename.lower().endswith('.pdf'):
+            return f'/api/posts/{obj.post.slug}/attachments/{obj.pk}/preview/'
+        return self._get_raw_url(obj)
+
+    def get_file_name(self, obj):
+        return obj.file_name
+
+    def get_formatted_file_size(self, obj):
+        size = obj.file_size
+        if size < 1024:
+            return f"{size} KB"
+        elif size < 1024 * 1024:
+            return f"{size / 1024:.1f} MB"
+        return f"{size / (1024 * 1024):.1f} GB"
+
+
 class PostDetailSerializer(serializers.ModelSerializer):
     """Serializer cho chi tiết bài viết"""
     category_name = serializers.CharField(source='category.name', read_only=True)
     category_slug = serializers.CharField(source='category.slug', read_only=True)
     
+    attachments = PostAttachmentSerializer(many=True, read_only=True)
+
     class Meta:
         model = Post
         fields = ['id', 'title', 'slug', 'summary', 'content', 'thumbnail', 
                   'category', 'category_name', 'category_slug', 'is_featured', 'views', 
-                  'status', 'published_at', 'created_at', 'updated_at']
+                  'status', 'published_at', 'created_at', 'updated_at', 'attachments']
 
 
 class PageSerializer(serializers.ModelSerializer):

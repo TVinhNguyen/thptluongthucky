@@ -8,7 +8,7 @@ from django.urls import reverse
 from image_cropping import ImageCroppingMixin
 from unfold.admin import ModelAdmin
 from .models import (
-    Category, Post, Page, Document, Department, Staff, StaffFilterTag,
+    Category, Post, PostAttachment, Page, Document, Department, Staff, StaffFilterTag,
     PhotoAlbum, Photo, Video, Banner, ExternalLink, ContactMessage,
     SiteSetting, SidebarDocumentItem, SidebarNewsItem, SidebarIntroItem, SchoolYear, SchoolClass, TimetableEntry
 )
@@ -24,6 +24,22 @@ class CategoryAdmin(ModelAdmin):
     ordering = ['sort_order', 'name']
 
 
+class PostAttachmentInline(admin.TabularInline):
+    model = PostAttachment
+    extra = 1
+    fields = ['file', 'original_filename', 'file_size', 'download_count', 'file_url_display', 'sort_order']
+    readonly_fields = ['original_filename', 'file_size', 'download_count', 'file_url_display']
+    ordering = ['sort_order', 'id']
+
+    def file_url_display(self, obj):
+        if obj and obj.file_url:
+            from django.utils.html import format_html
+            return format_html('<a href="{}" target="_blank">Tai xuong / Xem file</a>', obj.file_url)
+        return 'Chua co file'
+
+    file_url_display.short_description = 'Link'
+
+
 @admin.register(Post)
 class PostAdmin(ModelAdmin):
     list_display = ['title', 'category', 'status', 'is_featured', 'views', 'published_at']
@@ -32,6 +48,7 @@ class PostAdmin(ModelAdmin):
     date_hierarchy = 'published_at'
     ordering = ['-published_at', '-created_at']
     readonly_fields = ['views', 'created_at', 'updated_at']
+    inlines = [PostAttachmentInline]
     
     fieldsets = (
         ('Thông tin cơ bản', {
