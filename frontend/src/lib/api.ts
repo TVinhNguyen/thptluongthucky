@@ -28,6 +28,21 @@ export interface Post {
   published_at: string;
   created_at?: string;
   updated_at?: string;
+  attachments?: PostAttachment[];
+}
+
+export interface PostAttachment {
+  id: number;
+  title: string;
+  file: string;
+  file_url: string;
+  file_view_url: string;
+  file_name: string;
+  file_size: number;
+  formatted_file_size: string;
+  download_count: number;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface Page {
@@ -213,6 +228,8 @@ export const api = {
     },
     getBySlug: (slug: string) => fetchAPI<Post>(`/posts/${slug}/`),
     getFeatured: () => fetchAPI<Post[]>('/posts/featured/'),
+    downloadAttachment: (slug: string, attachmentId: number) =>
+      fetchAPI<PostAttachment>(`/posts/${slug}/attachments/${attachmentId}/download/`, { method: 'POST' }),
     getByCategory: (categorySlug: string, page?: number, search?: string | null) => {
       const params = new URLSearchParams({ slug: categorySlug });
       if (page) params.set('page', page.toString());

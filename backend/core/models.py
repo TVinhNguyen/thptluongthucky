@@ -67,6 +67,60 @@ class Post(models.Model):
         return self.title
 
 
+class PostAttachment(models.Model):
+    """Files attached to a post."""
+
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name='attachments',
+        verbose_name="Bai viet",
+    )
+    file = CloudinaryField("File dinh kem", resource_type="raw", validators=[document_file_validator])
+    file_size = models.IntegerField(default=0, editable=False, verbose_name="Kich thuoc (KB)")
+    original_filename = models.CharField(max_length=255, blank=True, verbose_name="Ten file goc")
+    sort_order = models.IntegerField(default=0, verbose_name="Thu tu")
+    download_count = models.IntegerField(default=0, editable=False, verbose_name="Luot tai")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "File dinh kem bai viet"
+        verbose_name_plural = "File dinh kem bai viet"
+        ordering = ['sort_order', 'id']
+        indexes = [
+            models.Index(fields=['post', 'sort_order']),
+        ]
+
+    def __str__(self):
+        return self.file_name or f"Attachment #{self.pk}"
+
+    def save(self, *args, **kwargs) -> None:
+        if self.file:
+            try:
+                self.file_size = max(1, (self.file.size or 0) // 1024)
+                if hasattr(self.file, 'name') and not self.original_filename:
+                    self.original_filename = self.file.name.split('/')[-1]
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
+
+    @property
+    def file_url(self) -> str:
+        return getattr(self.file, 'url', '') if self.file else ''
+
+    @property
+    def file_name(self) -> str:
+        if self.original_filename:
+            return self.original_filename
+        if not self.file:
+            return ''
+        if hasattr(self.file, 'public_id'):
+            return self.file.public_id.split('/')[-1]
+        if hasattr(self.file, 'name'):
+            return self.file.name.split('/')[-1]
+        return ''
+
+
 class Page(models.Model):
     """Trang tĩnh: Giới thiệu, Lịch sử..."""
     title = models.CharField(max_length=500, verbose_name="Tiêu đề")
