@@ -67,6 +67,9 @@ class PostAdmin(ModelAdmin):
     )
     
     actions = ['publish_posts', 'unpublish_posts', 'make_featured', 'remove_featured']
+
+    class Media:
+        js = ("admin/js/photo_inline_file_input_fix.js",)
     
     @admin.action(description='Xuất bản bài viết đã chọn')
     def publish_posts(self, request, queryset):
@@ -105,6 +108,9 @@ class PageAdmin(ModelAdmin):
             'fields': ('content',)
         }),
     )
+
+    class Media:
+        js = ("admin/js/photo_inline_file_input_fix.js",)
 
 
 @admin.register(Document)
