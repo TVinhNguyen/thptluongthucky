@@ -487,6 +487,7 @@ class BannerViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BannerSerializer
     permission_classes = [AllowAny]
 
+    @method_decorator(cache_page(settings.CACHE_TTL_SECONDS * 10))
     @action(detail=True, methods=['get'], url_path='cropped-image')
     def cropped_image(self, request, pk=None):
         """
@@ -531,9 +532,7 @@ class BannerViewSet(viewsets.ReadOnlyModelViewSet):
             output.seek(0)
 
             response = HttpResponse(output.getvalue(), content_type="image/jpeg")
-            response["Cache-Control"] = "no-cache, no-store, must-revalidate"
-            response["Pragma"] = "no-cache"
-            response["Expires"] = "0"
+            response["Cache-Control"] = "public, max-age=86400"
             return response
         except Exception:
             logger.exception("Failed to build cropped banner image for banner id=%s", banner.pk)
