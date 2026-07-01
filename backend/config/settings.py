@@ -35,6 +35,8 @@ SERVE_STATIC = os.environ.get('SERVE_STATIC', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# Trust the X-Forwarded-Proto header from the reverse proxy (Nginx) to generate https URLs
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 
@@ -285,6 +287,8 @@ CKEDITOR_5_CONFIGS = {
     }
 }
 
+# CKEditor inline image uploads are served from the shared /media volume.
+# Keep model-level CloudinaryField storage unchanged below.
 CKEDITOR_5_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
 CLOUDINARY_STORAGE = {
