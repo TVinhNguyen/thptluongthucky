@@ -287,7 +287,9 @@ CKEDITOR_5_CONFIGS = {
     }
 }
 
-CKEDITOR_5_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+# CKEditor inline image uploads are served from the shared /media volume.
+# Keep model-level CloudinaryField storage unchanged below.
+CKEDITOR_5_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
 CLOUDINARY_STORAGE = {
     "CLOUD_NAME": os.getenv("CLOUDINARY_CLOUD_NAME"),
